@@ -99,7 +99,9 @@ defmodule Forumid.Profiles do
 
   """
   def change_user_profile(%UserProfile{} = user_profile, attrs \\ %{}) do
-    UserProfile.changeset(user_profile, attrs)
+    user_profile
+    |> UserProfile.changeset(attrs)
+    |> Ecto.Changeset.cast(attrs, [])
   end
 
   ## mendapatkan user profile berdasarkan user id
