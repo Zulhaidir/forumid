@@ -106,4 +106,9 @@ defmodule Forumid.Profiles do
   def get_user_profile_by_user_id(user_id) do
     Repo.get_by(UserProfile, user_id: user_id)
   end
+
+  ## mendapatkan user profile berdasarkan username
+  def get_user_profile_by_username(username) do
+    Repo.get_by(UserProfile, username: username)
+  end
 end

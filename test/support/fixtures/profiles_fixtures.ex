@@ -1,4 +1,6 @@
 defmodule Forumid.ProfilesFixtures do
+  import Forumid.AccountsFixtures
+
   @moduledoc """
   This module defines test helpers for creating
   entities via the `Forumid.Profiles` context.
@@ -7,19 +9,9 @@ defmodule Forumid.ProfilesFixtures do
   @doc """
   Generate a user_profile.
   """
-  def user_profile_fixture(attrs \\ %{}) do
-    {:ok, user_profile} =
-      attrs
-      |> Enum.into(%{
-        avatar_url: "some avatar_url",
-        bio: "some bio",
-        full_name: "some full_name",
-        is_active: true,
-        phone: "some phone",
-        username: "some username"
-      })
-      |> Forumid.Profiles.create_user_profile()
+  def user_profile_fixture(_attrs \\ %{}) do
+    user = user_fixture()
 
-    user_profile
+    Forumid.Profiles.get_user_profile_by_user_id(user.id)
   end
 end

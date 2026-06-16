@@ -8,7 +8,14 @@ defmodule Forumid.ProfilesTest do
 
     import Forumid.ProfilesFixtures
 
-    @invalid_attrs %{username: nil, full_name: nil, avatar_url: nil, bio: nil, phone: nil, is_active: nil}
+    @invalid_attrs %{
+      username: nil,
+      full_name: nil,
+      avatar_url: nil,
+      bio: nil,
+      phone: nil,
+      is_active: nil
+    }
 
     test "list_user_profiles/0 returns all user_profiles" do
       user_profile = user_profile_fixture()
@@ -20,8 +27,35 @@ defmodule Forumid.ProfilesTest do
       assert Profiles.get_user_profile!(user_profile.id) == user_profile
     end
 
+    test "get_user_profile_by_user_id/1 returns profile by user_id" do
+      user_profile = user_profile_fixture()
+
+      profile =
+        Profiles.get_user_profile_by_user_id(user_profile.user_id)
+
+      assert profile.id == user_profile.id
+      assert profile.user_id == user_profile.user_id
+    end
+
+    test "get_user_profile_by_username/1 returns profile by username" do
+      user_profile = user_profile_fixture()
+
+      profile =
+        Profiles.get_user_profile_by_username(user_profile.username)
+
+      assert profile.id == user_profile.id
+      assert profile.username == user_profile.username
+    end
+
     test "create_user_profile/1 with valid data creates a user_profile" do
-      valid_attrs = %{username: "some username", full_name: "some full_name", avatar_url: "some avatar_url", bio: "some bio", phone: "some phone", is_active: true}
+      valid_attrs = %{
+        username: "some username",
+        full_name: "some full_name",
+        avatar_url: "some avatar_url",
+        bio: "some bio",
+        phone: "some phone",
+        is_active: true
+      }
 
       assert {:ok, %UserProfile{} = user_profile} = Profiles.create_user_profile(valid_attrs)
       assert user_profile.username == "some username"
@@ -38,9 +72,19 @@ defmodule Forumid.ProfilesTest do
 
     test "update_user_profile/2 with valid data updates the user_profile" do
       user_profile = user_profile_fixture()
-      update_attrs = %{username: "some updated username", full_name: "some updated full_name", avatar_url: "some updated avatar_url", bio: "some updated bio", phone: "some updated phone", is_active: false}
 
-      assert {:ok, %UserProfile{} = user_profile} = Profiles.update_user_profile(user_profile, update_attrs)
+      update_attrs = %{
+        username: "some updated username",
+        full_name: "some updated full_name",
+        avatar_url: "some updated avatar_url",
+        bio: "some updated bio",
+        phone: "some updated phone",
+        is_active: false
+      }
+
+      assert {:ok, %UserProfile{} = user_profile} =
+               Profiles.update_user_profile(user_profile, update_attrs)
+
       assert user_profile.username == "some updated username"
       assert user_profile.full_name == "some updated full_name"
       assert user_profile.avatar_url == "some updated avatar_url"
@@ -51,7 +95,10 @@ defmodule Forumid.ProfilesTest do
 
     test "update_user_profile/2 with invalid data returns error changeset" do
       user_profile = user_profile_fixture()
-      assert {:error, %Ecto.Changeset{}} = Profiles.update_user_profile(user_profile, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Profiles.update_user_profile(user_profile, @invalid_attrs)
+
       assert user_profile == Profiles.get_user_profile!(user_profile.id)
     end
 
