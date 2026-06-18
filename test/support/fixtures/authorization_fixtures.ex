@@ -17,4 +17,20 @@ defmodule Forumid.AuthorizationFixtures do
     {:ok, role} = Forumid.Authorization.create_role(attrs)
     role
   end
+
+  @doc """
+  Generate a permission.
+  """
+  def permission_fixture(attrs \\ %{}) do
+    {:ok, permission} =
+      attrs
+      |> Enum.into(%{
+        resource: "article",
+        action: "create",
+        description: "Can create article"
+      })
+      |> Forumid.Authorization.create_permission()
+
+    permission
+  end
 end

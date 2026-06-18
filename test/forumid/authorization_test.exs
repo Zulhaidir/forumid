@@ -57,4 +57,75 @@ defmodule Forumid.AuthorizationTest do
       assert %Ecto.Changeset{} = Authorization.change_role(role)
     end
   end
+
+  describe "permissions" do
+    alias Forumid.Authorization.Permission
+    import Forumid.AuthorizationFixtures
+
+    @invalid_attrs %{resource: nil, action: nil}
+
+    test "list_permissions/0 returns all permissions" do
+      permission = permission_fixture()
+      assert Authorization.list_permissions() == [permission]
+    end
+
+    test "get_permission!/1 returns the permission with given id" do
+      permission = permission_fixture()
+      assert Authorization.get_permission!(permission.id) == permission
+    end
+
+    test "create_permission/1 with valid data creates a permission" do
+      valid_attrs = %{
+        resource: "article",
+        action: "create",
+        description: "Can create article"
+      }
+
+      assert {:ok, %Permission{} = permission} = Authorization.create_permission(valid_attrs)
+      assert permission.resource == "article"
+      assert permission.action == "create"
+      assert permission.description == "Can create article"
+    end
+
+    test "create_permission/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Authorization.create_permission(@invalid_attrs)
+    end
+
+    test "update_permission/2 with valid data updates the permission" do
+      permission = permission_fixture()
+
+      update_attrs = %{
+        resource: "article",
+        action: "publish",
+        description: "Can publish article"
+      }
+
+      assert {:ok, %Permission{} = permission} =
+               Authorization.update_permission(permission, update_attrs)
+
+      assert permission.resource == "article"
+      assert permission.action == "publish"
+      assert permission.description == "Can publish article"
+    end
+
+    test "update_permission/2 with invalid data returns error changeset" do
+      permission = permission_fixture()
+
+      assert {:error, %Ecto.Changeset{}} =
+               Authorization.update_permission(permission, @invalid_attrs)
+
+      assert permission == Authorization.get_permission!(permission.id)
+    end
+
+    test "delete_permission/1 deletes the permission" do
+      permission = permission_fixture()
+      assert {:ok, %Permission{}} = Authorization.delete_permission(permission)
+      assert_raise Ecto.NoResultsError, fn -> Authorization.get_permission!(permission.id) end
+    end
+
+    test "change_permission/1 returns a permission changeset" do
+      permission = permission_fixture()
+      assert %Ecto.Changeset{} = Authorization.change_permission(permission)
+    end
+  end
 end
