@@ -41,8 +41,8 @@ defmodule Forumid.Content.Article do
     ])
     |> validate_length(:title, min: 5, max: 255)
     |> validate_length(:slug, min: 3, max: 255)
-    # |> validate_length(:content, min: 20)
-    # |> validate_length(:excerpt, max: 500)
+    |> validate_length(:content, min: 20)
+    |> validate_length(:excerpt, max: 500)
     |> validate_inclusion(:status, @statuses)
     |> unique_constraint(:slug)
   end

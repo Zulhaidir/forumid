@@ -15,7 +15,6 @@ defmodule Forumid.Repo.Migrations.CreateUserProfiles do
       timestamps(type: :utc_datetime)
     end
 
-    create index(:user_profiles, [:user_id])
     create unique_index(:user_profiles, [:username])
     create unique_index(:user_profiles, [:user_id])
   end
