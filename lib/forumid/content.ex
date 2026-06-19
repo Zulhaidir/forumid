@@ -50,8 +50,23 @@ defmodule Forumid.Content do
     Repo.all(ArticleMedia)
   end
 
+  ## LIST by article id
+  def list_article_media_by_article_id(article_id) do
+    ArticleMedia
+    |> where([am], am.article_id == ^article_id)
+    |> order_by([am], asc: am.sort_order)
+    |> Repo.all()
+  end
+
   ## GET
   def get_article_media!(id), do: Repo.get!(ArticleMedia, id)
+
+  ## GET with media
+  def get_article_with_media!(id) do
+    Article
+    |> Repo.get!(id)
+    |> Repo.preload(:article_media)
+  end
 
   ## CREATE
   def create_article_media(attrs \\ %{}) do

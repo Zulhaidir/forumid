@@ -15,6 +15,7 @@ defmodule Forumid.Content.Article do
     field :published_at, :utc_datetime
 
     belongs_to :author, Forumid.Accounts.User
+    has_many :article_media, Forumid.Content.ArticleMedia, preload_order: [asc: :sort_order]
 
     timestamps(type: :utc_datetime)
   end
