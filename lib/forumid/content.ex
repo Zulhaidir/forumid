@@ -58,6 +58,21 @@ defmodule Forumid.Content do
     |> Repo.all()
   end
 
+  ## LIST with media
+  def list_articles_with_media do
+    Article
+    |> Repo.all()
+    |> Repo.preload(:article_media)
+  end
+
+  ## LIST full
+  def list_articles_full do
+    Article
+    |> order_by([a], desc: a.inserted_at)
+    |> Repo.all()
+    |> Repo.preload([:author, :article_media])
+  end
+
   ## GET
   def get_article_media!(id), do: Repo.get!(ArticleMedia, id)
 
@@ -66,6 +81,30 @@ defmodule Forumid.Content do
     Article
     |> Repo.get!(id)
     |> Repo.preload(:article_media)
+  end
+
+  ## GET by slug
+  def get_article_by_slug(slug) do
+    Repo.get_by(Article, slug: slug)
+  end
+
+  ## GET by slug!
+  def get_article_by_slug!(slug) do
+    Repo.get_by!(Article, slug: slug)
+  end
+
+  ## GET full
+  def get_article_full!(id) do
+    Article
+    |> Repo.get!(id)
+    |> Repo.preload([:author, :article_media])
+  end
+
+  ## GET full by slug
+  def get_article_full_by_slug!(slug) do
+    Article
+    |> Repo.get_by!(slug: slug)
+    |> Repo.preload([:author, :article_media])
   end
 
   ## CREATE
