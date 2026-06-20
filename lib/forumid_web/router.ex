@@ -23,6 +23,7 @@ defmodule ForumidWeb.Router do
     get "/", PageController, :home
 
     live "/@:username", ProfileLive.Show, :show
+    get "/articles/:slug", ArticleController, :show
   end
 
   # Other scopes may use custom stacks.
