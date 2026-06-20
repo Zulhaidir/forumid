@@ -3,22 +3,13 @@ defmodule Forumid.Profiles do
   alias Forumid.Repo
   alias Forumid.Profiles.UserProfile
 
+  ## -----------------------------------------
+  ## User Profile
+  ## -----------------------------------------
+
   ## LIST
   def list_user_profiles do
     Repo.all(UserProfile)
-  end
-
-  ## GET BY ID
-  def get_user_profile!(id), do: Repo.get!(UserProfile, id)
-
-  ## GET BY USER ID
-  def get_user_profile_by_user_id(user_id) do
-    Repo.get_by(UserProfile, user_id: user_id)
-  end
-
-  ## GET BY USERNAME
-  def get_user_profile_by_username(username) do
-    Repo.get_by(UserProfile, username: username)
   end
 
   ## CREATE
@@ -40,8 +31,25 @@ defmodule Forumid.Profiles do
     Repo.delete(user_profile)
   end
 
-  ## CHANGESET (FIXED)
+  ## CHANGESET
   def change_user_profile(%UserProfile{} = user_profile, attrs \\ %{}) do
     UserProfile.changeset(user_profile, attrs)
+  end
+
+  ## -----------------------------------------
+  ##  Helper
+  ## -----------------------------------------
+
+  ## GET (by id)
+  def get_user_profile!(id), do: Repo.get!(UserProfile, id)
+
+  ## GET (by user_id)
+  def get_user_profile_by_user_id(user_id) do
+    Repo.get_by(UserProfile, user_id: user_id)
+  end
+
+  ## GET (by username)
+  def get_user_profile_by_username(username) do
+    Repo.get_by(UserProfile, username: username)
   end
 end

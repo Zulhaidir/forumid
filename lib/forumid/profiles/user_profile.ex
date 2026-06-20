@@ -2,6 +2,8 @@ defmodule Forumid.Profiles.UserProfile do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Forumid.Accounts.User
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "user_profiles" do
@@ -12,7 +14,7 @@ defmodule Forumid.Profiles.UserProfile do
     field :phone, :string
     field :is_active, :boolean, default: false
 
-    belongs_to :user, Forumid.Accounts.User, type: :binary_id
+    belongs_to :user, User, type: :binary_id
 
     timestamps(type: :utc_datetime)
   end

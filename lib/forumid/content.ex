@@ -50,14 +50,6 @@ defmodule Forumid.Content do
     Repo.all(ArticleMedia)
   end
 
-  ## LIST (by article_id)
-  def list_article_media_by_article_id(article_id) do
-    ArticleMedia
-    |> where([am], am.article_id == ^article_id)
-    |> order_by([am], asc: am.sort_order)
-    |> Repo.all()
-  end
-
   ## GET
   def get_article_media!(id), do: Repo.get!(ArticleMedia, id)
 
@@ -88,6 +80,14 @@ defmodule Forumid.Content do
   ## -----------------------------------------
   ## Helper
   ## -----------------------------------------
+
+  ## LIST (by article_id)
+  def list_article_media_by_article_id(article_id) do
+    ArticleMedia
+    |> where([am], am.article_id == ^article_id)
+    |> order_by([am], asc: am.sort_order)
+    |> Repo.all()
+  end
 
   ## LIST (with preload)
   def list_articles_with_media do

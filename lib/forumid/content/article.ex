@@ -2,6 +2,9 @@ defmodule Forumid.Content.Article do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Forumid.Accounts.User
+  alias Forumid.Content.ArticleMedia
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   @statuses ["draft", "published", "archived"]
@@ -14,8 +17,8 @@ defmodule Forumid.Content.Article do
     field :status, :string
     field :published_at, :utc_datetime
 
-    belongs_to :author, Forumid.Accounts.User
-    has_many :article_media, Forumid.Content.ArticleMedia, preload_order: [asc: :sort_order]
+    belongs_to :author, User
+    has_many :article_media, ArticleMedia, preload_order: [asc: :sort_order]
 
     timestamps(type: :utc_datetime)
   end

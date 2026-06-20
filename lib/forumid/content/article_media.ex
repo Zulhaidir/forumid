@@ -2,6 +2,8 @@ defmodule Forumid.Content.ArticleMedia do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Forumid.Content.Article
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
@@ -14,7 +16,7 @@ defmodule Forumid.Content.ArticleMedia do
     field :caption, :string
     field :alt_text, :string
 
-    belongs_to :article, Forumid.Content.Article
+    belongs_to :article, Article
 
     timestamps(type: :utc_datetime)
   end
