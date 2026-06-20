@@ -5,7 +5,7 @@ defmodule ForumidWeb.ArticleController do
 
   def show(conn, %{"slug" => slug}) do
     article =
-      Content.get_article_full_by_slug!(slug)
+      Content.article_by_slug!(slug)
 
     render(conn, :show, article: article)
   end

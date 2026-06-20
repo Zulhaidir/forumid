@@ -103,6 +103,14 @@ defmodule Forumid.Content do
     |> Repo.preload([:author, :article_media])
   end
 
+  def list_published_articles(status \\ "published") do
+    Article
+    |> where([a], a.status == ^status)
+    |> order_by([a], desc: a.published_at)
+    |> Repo.all()
+    |> Repo.preload([:author])
+  end
+
   ## GET (by id)
   def get_article_with_media!(id) do
     Article
@@ -125,7 +133,7 @@ defmodule Forumid.Content do
     Repo.get_by!(Article, slug: slug)
   end
 
-  def get_article_full_by_slug!(slug) do
+  def article_by_slug!(slug) do
     Article
     |> Repo.get_by!(slug: slug)
     |> Repo.preload([:author, :article_media])
