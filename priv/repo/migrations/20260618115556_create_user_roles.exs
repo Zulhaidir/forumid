@@ -8,6 +8,11 @@ defmodule Forumid.Repo.Migrations.CreateUserRoles do
       add :user_id, references(:users, type: :binary_id, on_delete: :delete_all), null: false
       add :role_id, references(:roles, type: :binary_id, on_delete: :delete_all), null: false
 
+      add :assigned_by, references(:users, type: :binary_id, on_delete: :nilify_all)
+      add :assigned_at, :utc_datetime
+
+      add :is_active, :boolean, default: true, null: false
+
       timestamps(type: :utc_datetime)
     end
 
@@ -15,5 +20,7 @@ defmodule Forumid.Repo.Migrations.CreateUserRoles do
 
     create index(:user_roles, [:user_id])
     create index(:user_roles, [:role_id])
+    create index(:user_roles, [:assigned_by])
+    create index(:user_roles, [:is_active])
   end
 end

@@ -1,8 +1,9 @@
 defmodule ForumidWeb.PageControllerTest do
   use ForumidWeb.ConnCase
 
-  test "GET /", %{conn: conn} do
+  test "GET /" do
+    conn = build_conn()
     conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Peace of mind from prototype to production"
+    assert html_response(conn, 200) =~ "ForumID"
   end
 end
