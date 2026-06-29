@@ -2,7 +2,7 @@ defmodule Forumid.Repo.Migrations.CreatePermissions do
   use Ecto.Migration
 
   def change do
-    create table(:permissions, primary_key: false) do
+    create table(:permissions, primary_key: false, options: "ENGINE=ROCKSDB") do
       add :id, :binary_id, primary_key: true
 
       add :resource, :string, null: false

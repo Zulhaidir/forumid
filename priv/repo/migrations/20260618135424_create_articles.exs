@@ -2,7 +2,7 @@ defmodule Forumid.Repo.Migrations.CreateArticles do
   use Ecto.Migration
 
   def change do
-    create table(:articles, primary_key: false) do
+    create table(:articles, primary_key: false, options: "ENGINE=ROCKSDB") do
       add :id, :binary_id, primary_key: true
 
       add :title, :string, null: false
@@ -15,13 +15,12 @@ defmodule Forumid.Repo.Migrations.CreateArticles do
       add :status, :string, null: false, default: "draft"
 
       add :published_at, :utc_datetime
-      add :author_id, references(:users, type: :binary_id, on_delete: :restrict), null: false
+      add :author_id, :binary_id, null: false
 
       timestamps(type: :utc_datetime)
     end
 
     create unique_index(:articles, [:slug])
-
     create index(:articles, [:author_id])
     create index(:articles, [:status])
     create index(:articles, [:published_at])

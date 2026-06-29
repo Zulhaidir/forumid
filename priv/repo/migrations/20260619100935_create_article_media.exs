@@ -2,12 +2,9 @@ defmodule Forumid.Repo.Migrations.CreateArticleMedia do
   use Ecto.Migration
 
   def change do
-    create table(:article_media, primary_key: false) do
+    create table(:article_media, primary_key: false, options: "ENGINE=ROCKSDB") do
       add :id, :binary_id, primary_key: true
-
-      add :article_id, references(:articles, type: :binary_id, on_delete: :delete_all),
-        null: false
-
+      add :article_id, :binary_id, null: false
       add :media_type, :string, null: false
       add :file_path, :string, null: false
       add :sort_order, :integer, null: false, default: 0

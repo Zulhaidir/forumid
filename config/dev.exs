@@ -2,8 +2,8 @@ import Config
 
 # Configure your database
 config :forumid, Forumid.Repo,
-  username: "root",
-  password: "mantapcika",
+  username: "zulhaidir",
+  password: "Admin@123",
   hostname: "localhost",
   database: "forumid_dev",
   stacktrace: true,

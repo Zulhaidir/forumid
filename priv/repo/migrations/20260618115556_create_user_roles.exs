@@ -2,13 +2,13 @@ defmodule Forumid.Repo.Migrations.CreateUserRoles do
   use Ecto.Migration
 
   def change do
-    create table(:user_roles, primary_key: false) do
+    create table(:user_roles, primary_key: false, options: "ENGINE=ROCKSDB") do
       add :id, :binary_id, primary_key: true
 
-      add :user_id, references(:users, type: :binary_id, on_delete: :delete_all), null: false
-      add :role_id, references(:roles, type: :binary_id, on_delete: :delete_all), null: false
+      add :user_id, :binary_id, null: false
+      add :role_id, :binary_id, null: false
 
-      add :assigned_by, references(:users, type: :binary_id, on_delete: :nilify_all)
+      add :assigned_by, :binary_id
       add :assigned_at, :utc_datetime
 
       add :is_active, :boolean, default: true, null: false

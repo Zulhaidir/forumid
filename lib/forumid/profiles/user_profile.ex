@@ -31,8 +31,22 @@ defmodule Forumid.Profiles.UserProfile do
     user_profile
     |> cast(attrs, [:user_id, :username, :is_active])
     |> validate_required([:user_id, :username])
+    |> validate_user_exists()
     |> unique_constraint(:user_id)
     |> unique_constraint(:username)
-    |> foreign_key_constraint(:user_id)
+  end
+
+  ## Pengganti foreign_key_constraint(:user_id)
+  defp validate_user_exists(changeset) do
+    user_id = get_field(changeset, :user_id)
+
+    if user_id do
+      case Forumid.Repo.get(User, user_id) do
+        nil -> add_error(changeset, :user_id, "user tidak di temukan")
+        _ -> changeset
+      end
+    else
+      changeset
+    end
   end
 end

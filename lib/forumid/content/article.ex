@@ -2,6 +2,7 @@ defmodule Forumid.Content.Article do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Forumid.Repo
   alias Forumid.Accounts.User
   alias Forumid.Content.ArticleMedia
 
@@ -48,6 +49,21 @@ defmodule Forumid.Content.Article do
     |> validate_length(:content, min: 20)
     |> validate_length(:excerpt, max: 500)
     |> validate_inclusion(:status, @statuses)
+    |> validate_author_exists()
     |> unique_constraint(:slug)
+  end
+
+  ## Pengganti foreign_key_constraint(:author_id)
+  defp validate_author_exists(changeset) do
+    author_id = get_field(changeset, :author_id)
+
+    if author_id do
+      case Repo.get(User, author_id) do
+        nil -> add_error(changeset, :author_id, "penulis tidak ditemukan")
+        _ -> changeset
+      end
+    else
+      changeset
+    end
   end
 end

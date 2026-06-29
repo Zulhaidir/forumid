@@ -61,6 +61,36 @@ defmodule Forumid.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  @doc """
+  Menghapus user beserta semua data terkait.
+  Menggantikan fungsi on_delete: :delete_all yang biasanya ada di FK
+  """
+  def delete_user(%User{} = user) do
+    tokens_query =
+      from(t in UserToken,
+        where: t.user_id == ^user.id
+      )
+
+    profile_query =
+      from(p in UserProfile,
+        where: p.user_id == ^user.id
+      )
+
+    multi =
+      Ecto.Multi.new()
+      |> Ecto.Multi.delete_all(:delete_tokens, tokens_query)
+      |> Ecto.Multi.delete_all(:delete_profile, profile_query)
+      |> Ecto.Multi.delete(:delete_user, user)
+
+    case Repo.transact(multi) do
+      {:ok, %{delete_user: deleted_user}} ->
+        {:ok, deleted_user}
+
+      {:error, _step, reason, _changes} ->
+        {:error, reason}
+    end
+  end
+
   ## User registration
 
   @doc """
