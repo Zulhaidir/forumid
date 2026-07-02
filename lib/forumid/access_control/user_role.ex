@@ -26,7 +26,7 @@ defmodule Forumid.AccessControl.UserRole do
     |> validate_user_exists()
     |> validate_role_exists()
     |> validate_assigned_by_exists()
-    |> unique_constraint([:user_id, :role_id])
+    |> unique_constraint(:user_role, name: :user_roles_user_id_role_id_index)
   end
 
   # Pengganti foreign_key_constraint(:user_id)

@@ -76,3 +76,20 @@ config :phoenix, :json_library, Jason
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
+
+config :forumid,
+  system_roles: ~w(admin superadmin),
+  system_permissions: [
+    {"users", "read"},
+    {"users", "create"},
+    {"users", "update"},
+    {"users", "delete"},
+    {"roles", "read"},
+    {"roles", "create"},
+    {"roles", "update"},
+    {"roles", "delete"},
+    {"permissions", "read"},
+    {"permissions", "create"},
+    {"permissions", "update"},
+    {"permissions", "delete"}
+  ]

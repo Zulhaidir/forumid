@@ -19,6 +19,6 @@ defmodule Forumid.Authorization.Permission do
     |> validate_required([:resource, :action])
     |> validate_length(:resource, min: 2, max: 100)
     |> validate_length(:action, min: 2, max: 100)
-    |> unique_constraint([:resource, :action])
+    |> unique_constraint(:resource_action, name: :permissions_resource_action_index)
   end
 end

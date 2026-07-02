@@ -28,7 +28,7 @@ defmodule Forumid.AccessControl.RolePermission do
     |> validate_role_exists()
     |> validate_permission_exists()
     |> validate_granted_by_exists()
-    |> unique_constraint([:role_id, :permission_id])
+    |> unique_constraint(:role_permission, name: :role_permissions_role_id_permission_id_index)
   end
 
   # Pengganti foreign_key_constraint(:role_id)

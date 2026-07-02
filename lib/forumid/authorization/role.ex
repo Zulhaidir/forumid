@@ -17,6 +17,6 @@ defmodule Forumid.Authorization.Role do
     |> cast(attrs, [:name, :description])
     |> validate_required([:name])
     |> validate_length(:name, min: 2, max: 100)
-    |> unique_constraint(:name)
+    |> unique_constraint(:name, name: :roles_name_index)
   end
 end
