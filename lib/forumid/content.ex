@@ -35,13 +35,17 @@ defmodule Forumid.Content do
   def delete_article(%Article{} = article) do
     media_query = from(m in ArticleMedia, where: m.article_id == ^article.id)
 
-    Ecto.Multi.new()
-    |> Ecto.Multi.delete_all(:delete_media, media_query)
-    |> Ecto.Multi.delete(:delete_article, article)
-    |> Repo.transact()
-    |> case do
-      {:ok, %{delete_article: article}} -> {:ok, article}
-      {:error, _step, reason, _changes} -> {:error, reason}
+    multi =
+      Ecto.Multi.new()
+      |> Ecto.Multi.delete_all(:delete_media, media_query)
+      |> Ecto.Multi.delete(:delete_article, article)
+
+    case Repo.transact(multi) do
+      {:ok, %{delete_article: deleted_article}} ->
+        {:ok, deleted_article}
+
+      {:error, _step, reason, _changes} ->
+        {:error, reason}
     end
   end
 

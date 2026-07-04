@@ -1,11 +1,10 @@
 defmodule Forumid.Authorization do
   import Ecto.Query, warn: false
 
+  alias Forumid.AccessControl
   alias Forumid.Repo
   alias Forumid.Authorization.Role
   alias Forumid.Authorization.Permission
-  alias Forumid.AccessControl.UserRole
-  alias Forumid.AccessControl.RolePermission
 
   ## =========================================
   ## Role
@@ -87,33 +86,6 @@ defmodule Forumid.Authorization do
     |> Repo.exists?()
   end
 
-  @doc """
-  Mengembalikan daftar user aktif yang memiliki role ini.
-  Berguna untuk Admin Panel yang menampilkan siapa saja pemegang role.
-  """
-  def list_role_users(%Role{id: id}) do
-    UserRole
-    |> where([ur], ur.role_id == ^id and ur.is_active == true)
-    |> Repo.all()
-  end
-
-  @doc """
-  Mengembalikan jumlah user aktif yang memiliki role ini.
-  Menggunakan Repo.aggregate agar tidak memuat seluruh row ke memori.
-  """
-  def count_role_users(%Role{id: id}) do
-    UserRole
-    |> where([ur], ur.role_id == ^id and ur.is_active == true)
-    |> Repo.aggregate(:count)
-  end
-
-  @doc "Mengembalikan jumlah permission yang terpasang pada role ini."
-  def count_role_permissions(%Role{id: id}) do
-    RolePermission
-    |> where([rp], rp.role_id == ^id)
-    |> Repo.aggregate(:count)
-  end
-
   ## ----------- Validation Helper -----------
 
   @doc "Memvalidasi bahwa role dengan id tertentu ada di database."
@@ -151,22 +123,6 @@ defmodule Forumid.Authorization do
   end
 
   @doc """
-  Mengecek apakah role sedang digunakan oleh minimal satu user aktif.
-  Dibangun di atas count_role_users/1 agar tidak menduplikasi query.
-  """
-  def role_in_use?(%Role{} = role) do
-    count_role_users(role) > 0
-  end
-
-  @doc """
-  Mengecek apakah role masih memiliki permission yang terpasang.
-  Dibangun di atas count_role_permissions/1 agar tidak menduplikasi query.
-  """
-  def role_has_permissions?(%Role{} = role) do
-    count_role_permissions(role) > 0
-  end
-
-  @doc """
   Mengecek apakah role boleh dihapus.
 
   Sebuah role boleh dihapus hanya jika memenuhi ketiga syarat:
@@ -176,8 +132,8 @@ defmodule Forumid.Authorization do
   """
   def can_delete_role?(%Role{} = role) do
     not system_role?(role) and
-      not role_in_use?(role) and
-      not role_has_permissions?(role)
+      not AccessControl.role_in_use?(role.id) and
+      not AccessControl.role_has_any_permission?(role.id)
   end
 
   ## =========================================
@@ -264,13 +220,6 @@ defmodule Forumid.Authorization do
     |> Repo.all()
   end
 
-  @doc "Mengembalikan jumlah role yang menggunakan permission ini."
-  def count_permission_roles(%Permission{id: id}) do
-    RolePermission
-    |> where([rp], rp.permission_id == ^id)
-    |> Repo.aggregate(:count)
-  end
-
   ## ----------- Validation Helper -----------
 
   @doc "Memvalidasi bahwa permission dengan id tertentu ada di database."
@@ -297,14 +246,6 @@ defmodule Forumid.Authorization do
   end
 
   @doc """
-  Mengecek apakah permission sedang digunakan oleh minimal satu role.
-  Dibangun di atas count_permission_roles/1 agar tidak menduplikasi query.
-  """
-  def permission_in_use?(%Permission{} = permission) do
-    count_permission_roles(permission) > 0
-  end
-
-  @doc """
   Mengecek apakah permission boleh dihapus.
 
   Sebuah permission boleh dihapus hanya jika memenuhi kedua syarat:
@@ -313,7 +254,7 @@ defmodule Forumid.Authorization do
   """
   def can_delete_permission?(%Permission{} = permission) do
     not system_permission?(permission) and
-      not permission_in_use?(permission)
+      not AccessControl.permission_in_use?(permission.id)
   end
 
   ## =========================================
@@ -332,15 +273,15 @@ defmodule Forumid.Authorization do
   defp deletion_error_reason(%Role{} = role) do
     cond do
       system_role?(role) -> {:role, :system_role}
-      role_in_use?(role) -> {:role, :in_use}
-      role_has_permissions?(role) -> {:role, :has_permissions}
+      AccessControl.role_in_use?(role.id) -> {:role, :in_use}
+      AccessControl.role_has_any_permission?(role.id) -> {:role, :has_permissions}
     end
   end
 
   defp permission_deletion_error_reason(%Permission{} = permission) do
     cond do
       system_permission?(permission) -> {:permission, :system_permission}
-      permission_in_use?(permission) -> {:permission, :in_use}
+      AccessControl.permission_in_use?(permission.id) -> {:permission, :in_use}
     end
   end
 end
