@@ -1,11 +1,9 @@
 defmodule Forumid.Profiles.UserProfile do
-  use Ecto.Schema
+  use Forumid.Schema
   import Ecto.Changeset
 
   alias Forumid.Accounts.User
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
   schema "user_profiles" do
     field :full_name, :string
     field :username, :string

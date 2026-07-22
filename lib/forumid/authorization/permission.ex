@@ -1,9 +1,8 @@
 defmodule Forumid.Authorization.Permission do
-  use Ecto.Schema
+  use Forumid.Schema
   import Ecto.Changeset
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
+  @type t :: %__MODULE__{}
   schema "permissions" do
     field :resource, :string
     field :action, :string

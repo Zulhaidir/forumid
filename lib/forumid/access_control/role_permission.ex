@@ -1,5 +1,5 @@
 defmodule Forumid.AccessControl.RolePermission do
-  use Ecto.Schema
+  use Forumid.Schema
   import Ecto.Changeset
 
   alias Forumid.Repo
@@ -7,14 +7,14 @@ defmodule Forumid.AccessControl.RolePermission do
   alias Forumid.Authorization.Role
   alias Forumid.Authorization.Permission
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
+  @type t :: %__MODULE__{}
   schema "role_permissions" do
     belongs_to :role, Role
     belongs_to :permission, Permission
 
     # Audit trail
     field :granted_by, :binary_id
+    field :is_active, :boolean, default: true
     field :granted_at, :utc_datetime
 
     timestamps(type: :utc_datetime)
@@ -23,7 +23,7 @@ defmodule Forumid.AccessControl.RolePermission do
   @doc false
   def changeset(role_permission, attrs) do
     role_permission
-    |> cast(attrs, [:role_id, :permission_id, :granted_by, :granted_at])
+    |> cast(attrs, [:role_id, :permission_id, :granted_by, :granted_at, :is_active])
     |> validate_required([:role_id, :permission_id])
     |> validate_role_exists()
     |> validate_permission_exists()

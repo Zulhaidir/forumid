@@ -26,11 +26,6 @@ defmodule Forumid.Profiles do
     |> Repo.update()
   end
 
-  ## DELETE
-  def delete_user_profile(%UserProfile{} = user_profile) do
-    Repo.delete(user_profile)
-  end
-
   ## CHANGESET
   def change_user_profile(%UserProfile{} = user_profile, attrs \\ %{}) do
     UserProfile.changeset(user_profile, attrs)

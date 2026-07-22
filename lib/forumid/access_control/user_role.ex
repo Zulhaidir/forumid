@@ -1,20 +1,19 @@
 defmodule Forumid.AccessControl.UserRole do
-  use Ecto.Schema
+  use Forumid.Schema
   import Ecto.Changeset
 
   alias Forumid.Accounts.User
   alias Forumid.Authorization.Role
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
-
+  @type t :: %__MODULE__{}
   schema "user_roles" do
+    belongs_to :user, User
+    belongs_to :role, Role
+
+    # Audit trail
     field :assigned_at, :utc_datetime
     field :is_active, :boolean, default: true
     field :assigned_by, :binary_id
-
-    belongs_to :user, User
-    belongs_to :role, Role
 
     timestamps(type: :utc_datetime)
   end

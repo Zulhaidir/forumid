@@ -5,10 +5,11 @@ defmodule Forumid.Content do
   alias Forumid.Content.Article
   alias Forumid.Content.ArticleMedia
 
-  ## -----------------------------------------
+  ## =========================================
   ## Article
-  ## -----------------------------------------
+  ## =========================================
 
+  ## ----------------- CRUD ------------------
   ## LIST
   def list_articles do
     Repo.all(Article)
@@ -33,20 +34,7 @@ defmodule Forumid.Content do
 
   ## DELETE
   def delete_article(%Article{} = article) do
-    media_query = from(m in ArticleMedia, where: m.article_id == ^article.id)
-
-    multi =
-      Ecto.Multi.new()
-      |> Ecto.Multi.delete_all(:delete_media, media_query)
-      |> Ecto.Multi.delete(:delete_article, article)
-
-    case Repo.transact(multi) do
-      {:ok, %{delete_article: deleted_article}} ->
-        {:ok, deleted_article}
-
-      {:error, _step, reason, _changes} ->
-        {:error, reason}
-    end
+    delete_article_relationships(article)
   end
 
   ## CHANGE
@@ -54,10 +42,99 @@ defmodule Forumid.Content do
     Article.changeset(article, attrs)
   end
 
-  ## -----------------------------------------
-  ## Article Media
-  ## -----------------------------------------
+  ## --------------- Helper ------------------
+  ## List
+  def list_articles_with_media do
+    Article
+    |> Repo.all()
+    |> Repo.preload(:article_media)
+  end
 
+  def list_articles_full do
+    Article
+    |> order_by([a], desc: a.inserted_at)
+    |> Repo.all()
+    |> Repo.preload([:author, :article_media])
+  end
+
+  def list_published_articles(status \\ "published") do
+    Article
+    |> where([a], a.status == ^status)
+    |> order_by([a], desc: a.published_at)
+    |> Repo.all()
+    |> Repo.preload([:author])
+  end
+
+  def list_active_sessions(user_id) do
+    Article
+    |> where([a], a.author_id == ^user_id)
+    |> order_by([a], desc: a.inserted_at)
+    |> Repo.all()
+  end
+
+  ## Lookup
+  def get_article_by_slug(slug) do
+    Repo.get_by(Article, slug: slug)
+  end
+
+  def get_article_by_slug!(slug) do
+    Repo.get_by!(Article, slug: slug)
+  end
+
+  def article_by_slug!(slug) do
+    Article
+    |> Repo.get_by!(slug: slug)
+    |> Repo.preload([:author, :article_media])
+  end
+
+  def get_article_with_media!(id) do
+    Article
+    |> Repo.get!(id)
+    |> Repo.preload(:article_media)
+  end
+
+  def get_article_full!(id) do
+    Article
+    |> Repo.get!(id)
+    |> Repo.preload([:author, :article_media])
+  end
+
+  ## Count
+  ## Exists
+  ## Validation
+  ## Availibility
+
+  ## ----------- Business Helper -------------
+  ## Business Rule
+  ## Domain Operation
+
+  ## Relationship Operation
+  defp delete_article_relationships(%Article{} = article) do
+    media_list =
+      ArticleMedia
+      |> where([am], am.article_id == ^article.id)
+      |> Repo.all()
+
+    multi =
+      Enum.reduce(media_list, Ecto.Multi.new(), fn media, multi ->
+        Ecto.Multi.delete(multi, {:delete_media, media.id}, media)
+      end)
+      |> Ecto.Multi.delete(:delete_article, article)
+
+    case Repo.transact(multi) do
+      {:ok, %{delete_article: deleted}} ->
+        {:ok, deleted}
+
+      {:error, _step, reason, _changes} ->
+        {:error, reason}
+    end
+  end
+
+  ## =========================================
+  ##  Article Media
+  ## =========================================
+
+  ## ----------------- CRUD ------------------
   ## LIST
   def list_article_media do
     Repo.all(ArticleMedia)
@@ -90,11 +167,8 @@ defmodule Forumid.Content do
     ArticleMedia.changeset(article_media, attrs)
   end
 
-  ## -----------------------------------------
-  ## Helper
-  ## -----------------------------------------
-
-  ## LIST (by article_id)
+  ## --------------- Helper ------------------
+  ## List
   def list_article_media_by_article_id(article_id) do
     ArticleMedia
     |> where([am], am.article_id == ^article_id)
@@ -102,53 +176,14 @@ defmodule Forumid.Content do
     |> Repo.all()
   end
 
-  ## LIST (with preload)
-  def list_articles_with_media do
-    Article
-    |> Repo.all()
-    |> Repo.preload(:article_media)
-  end
+  ## Lookup
+  ## Count
+  ## Exists
+  ## Validation
+  ## Availibility
 
-  def list_articles_full do
-    Article
-    |> order_by([a], desc: a.inserted_at)
-    |> Repo.all()
-    |> Repo.preload([:author, :article_media])
-  end
-
-  def list_published_articles(status \\ "published") do
-    Article
-    |> where([a], a.status == ^status)
-    |> order_by([a], desc: a.published_at)
-    |> Repo.all()
-    |> Repo.preload([:author])
-  end
-
-  ## GET (by id)
-  def get_article_with_media!(id) do
-    Article
-    |> Repo.get!(id)
-    |> Repo.preload(:article_media)
-  end
-
-  def get_article_full!(id) do
-    Article
-    |> Repo.get!(id)
-    |> Repo.preload([:author, :article_media])
-  end
-
-  ## GET (by slug)
-  def get_article_by_slug(slug) do
-    Repo.get_by(Article, slug: slug)
-  end
-
-  def get_article_by_slug!(slug) do
-    Repo.get_by!(Article, slug: slug)
-  end
-
-  def article_by_slug!(slug) do
-    Article
-    |> Repo.get_by!(slug: slug)
-    |> Repo.preload([:author, :article_media])
-  end
+  ## ----------- Business Helper -------------
+  ## Business Rule
+  ## Domain Operation
+  ## Relationship Operation
 end

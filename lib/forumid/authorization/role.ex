@@ -1,9 +1,8 @@
 defmodule Forumid.Authorization.Role do
-  use Ecto.Schema
+  use Forumid.Schema
   import Ecto.Changeset
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
+  @type t :: %__MODULE__{}
   schema "roles" do
     field :name, :string
     field :description, :string

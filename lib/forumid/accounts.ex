@@ -8,6 +8,7 @@ defmodule Forumid.Accounts do
 
   alias Forumid.Accounts.{User, UserToken, UserNotifier}
   alias Forumid.Profiles.UserProfile
+  alias Forumid.Content.Article
 
   ## Database getters
 
@@ -66,25 +67,36 @@ defmodule Forumid.Accounts do
   Menggantikan fungsi on_delete: :delete_all yang biasanya ada di FK
   """
   def delete_user(%User{} = user) do
-    tokens_query =
-      from(t in UserToken,
-        where: t.user_id == ^user.id
-      )
+    if has_articles?(user) do
+      {:error, :user_memiliki_article}
+    else
+      delete_user_with_multi(user)
+    end
+  end
 
-    profile_query =
-      from(p in UserProfile,
-        where: p.user_id == ^user.id
-      )
+  ## Mengecek apakah author_id memiliki article yang terkait. Jika ada, user tidak bisa dihapus.
+  defp has_articles?(%User{} = user) do
+    Article
+    |> where([a], a.author_id == ^user.id)
+    |> Repo.exists?()
+  end
+
+  ## Menghapus user beserta semua data terkait.
+  defp delete_user_with_multi(%User{} = user) do
+    profile_list =
+      UserProfile
+      |> where([p], p.user_id == ^user.id)
+      |> Repo.all()
 
     multi =
-      Ecto.Multi.new()
-      |> Ecto.Multi.delete_all(:delete_tokens, tokens_query)
-      |> Ecto.Multi.delete_all(:delete_profile, profile_query)
+      Enum.reduce(profile_list, Ecto.Multi.new(), fn profile, multi ->
+        Ecto.Multi.delete(multi, {:delete_profile, profile.id}, profile)
+      end)
       |> Ecto.Multi.delete(:delete_user, user)
 
     case Repo.transact(multi) do
-      {:ok, %{delete_user: deleted_user}} ->
-        {:ok, deleted_user}
+      {:ok, %{delete_user: deleted}} ->
+        {:ok, deleted}
 
       {:error, _step, reason, _changes} ->
         {:error, reason}

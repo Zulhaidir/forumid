@@ -8,8 +8,9 @@ defmodule Forumid.Repo.Migrations.CreateRolePermissions do
       add :role_id, :binary_id, null: false
       add :permission_id, :binary_id, null: false
 
-      # Audit trail
+      ## Audit trail
       add :granted_by, :binary_id
+      add :is_active, :boolean, default: true, null: false
       add :granted_at, :utc_datetime
 
       timestamps(type: :utc_datetime)
@@ -20,6 +21,6 @@ defmodule Forumid.Repo.Migrations.CreateRolePermissions do
     create index(:role_permissions, [:role_id])
     create index(:role_permissions, [:permission_id])
     create index(:role_permissions, [:granted_by])
-    create index(:role_permissions, [:granted_at])
+    # create index(:role_permissions, [:granted_at])
   end
 end

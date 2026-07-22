@@ -1,12 +1,9 @@
 defmodule Forumid.Content.ArticleMedia do
-  use Ecto.Schema
+  use Forumid.Schema
   import Ecto.Changeset
 
   alias Forumid.Repo
   alias Forumid.Content.Article
-
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
 
   @media_types ["image", "video", "audio", "document"]
 

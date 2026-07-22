@@ -1,13 +1,11 @@
 defmodule Forumid.Content.Article do
-  use Ecto.Schema
+  use Forumid.Schema
   import Ecto.Changeset
 
   alias Forumid.Repo
   alias Forumid.Accounts.User
   alias Forumid.Content.ArticleMedia
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
   @statuses ["draft", "published", "archived"]
   schema "articles" do
     field :title, :string

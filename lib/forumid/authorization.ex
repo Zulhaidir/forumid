@@ -1,287 +1,164 @@
 defmodule Forumid.Authorization do
   import Ecto.Query, warn: false
 
-  alias Forumid.AccessControl
   alias Forumid.Repo
+  alias Forumid.Accounts.User
   alias Forumid.Authorization.Role
   alias Forumid.Authorization.Permission
+  alias Forumid.AccessControl.UserRole
+  alias Forumid.AccessControl.RolePermission
 
   ## =========================================
-  ## Role
+  ## Role CRUD
   ## =========================================
 
-  ## ----------------- CRUD ------------------
-
-  def list_roles, do: Repo.all(Role)
-
-  def get_role!(id), do: Repo.get!(Role, id)
-
-  @doc """
-  Membuat role baru.
-  Validasi uniqueness ditangani oleh changeset via unique_constraint.
-  """
+  @doc "Membuat role baru"
+  @spec create_role(map()) :: {:ok, Role.t()} | {:error, Ecto.Changeset.t()}
   def create_role(attrs \\ %{}) do
     %Role{}
     |> Role.changeset(attrs)
     |> Repo.insert()
   end
 
-  @doc """
-  Mengupdate role.
-  Role sistem tidak boleh diubah namanya karena nama adalah identitasnya.
-  Field lain seperti description tetap boleh diubah.
-  """
+  @doc "Mengambil semua role"
+  @spec list_roles() :: [Role.t()]
+  def list_roles, do: Repo.all(Role)
+
+  @doc "Mengambil role berdasarkan ID, jika tidak ditemukan akan melempar error"
+  @spec get_role!(Ecto.UUID.t()) :: Role.t()
+  def get_role!(id), do: Repo.get!(Role, id)
+
+  @doc "Memperbarui role"
+  @spec update_role(Role.t(), map()) :: {:ok, Role.t()} | {:error, Ecto.Changeset.t()}
   def update_role(%Role{} = role, attrs) do
-    if system_role?(role) and has_name_change?(attrs) do
-      {:error, {:role, :cannot_rename_system_role}}
-    else
-      role
-      |> Role.changeset(attrs)
-      |> Repo.update()
-    end
+    role
+    |> Role.changeset(attrs)
+    |> Repo.update()
   end
 
-  @doc """
-  Menghapus role.
-  Mendelegasikan seluruh pengecekan ke can_delete_role?/1
-  untuk menghindari duplikasi logika bisnis.
-  """
+  @doc "Menghapus role"
+  @spec delete_role(Role.t()) :: {:ok, Role.t()} | {:error, Ecto.Changeset.t()}
   def delete_role(%Role{} = role) do
-    if can_delete_role?(role) do
-      Repo.delete(role)
-    else
-      {:error, deletion_error_reason(role)}
-    end
+    Repo.delete(role)
   end
 
+  @doc "Membuat perubahan pada role tanpa menyimpannya ke database"
+  @spec change_role(Role.t(), map()) :: Ecto.Changeset.t()
   def change_role(%Role{} = role, attrs \\ %{}) do
     Role.changeset(role, attrs)
   end
 
-  ## --------------- Helper ------------------
-
-  @doc "Mengambil role berdasarkan nama."
-  def get_role_by_name(name) when is_binary(name) do
-    Repo.get_by(Role, name: name)
-  end
-
-  @doc "Mengembalikan daftar nama seluruh role."
-  def list_role_names do
-    Role
-    |> select([r], r.name)
-    |> Repo.all()
-  end
-
-  @doc "Mengecek apakah role dengan id tertentu ada."
-  def role_exists?(id) do
-    Role
-    |> where([r], r.id == ^id)
-    |> Repo.exists?()
-  end
-
-  @doc "Mengecek apakah nama role sudah terdaftar di database."
-  def role_name_exists?(name) when is_binary(name) do
-    Role
-    |> where([r], r.name == ^name)
-    |> Repo.exists?()
-  end
-
-  ## ----------- Validation Helper -----------
-
-  @doc "Memvalidasi bahwa role dengan id tertentu ada di database."
-  def valid_role?(id), do: role_exists?(id)
-
-  @doc """
-  Memvalidasi bahwa nama role tersedia untuk digunakan.
-  Mengembalikan true jika nama BELUM ada di database.
-  """
-  def valid_role_name?(name) when is_binary(name) do
-    not role_name_exists?(name)
-  end
-
-  ## ----------- Business Helper -------------
-
-  defp system_roles do
-    Application.fetch_env!(:forumid, :system_roles)
-  end
-
-  @doc """
-  Mengecek apakah role merupakan role bawaan sistem.
-  Role sistem dikonfigurasi via `config :forumid, system_roles`.
-
-  ## Contoh
-
-      iex> system_role?(%Role{name: "admin"})
-      true
-
-      iex> system_role?(%Role{name: "editor"})
-      false
-
-  """
-  def system_role?(%Role{name: name}) do
-    String.downcase(name) in Enum.map(system_roles(), &String.downcase/1)
-  end
-
-  @doc """
-  Mengecek apakah role boleh dihapus.
-
-  Sebuah role boleh dihapus hanya jika memenuhi ketiga syarat:
-  1. Bukan role sistem.
-  2. Tidak sedang digunakan user aktif.
-  3. Tidak memiliki permission terpasang.
-  """
-  def can_delete_role?(%Role{} = role) do
-    not system_role?(role) and
-      not AccessControl.role_in_use?(role.id) and
-      not AccessControl.role_has_any_permission?(role.id)
-  end
-
   ## =========================================
-  ## Permission
+  ## Permission CRUD
   ## =========================================
 
-  ## ----------------- CRUD ------------------
-
-  def list_permissions, do: Repo.all(Permission)
-
-  def get_permission!(id), do: Repo.get!(Permission, id)
-
-  @doc """
-  Membuat permission baru.
-  Validasi uniqueness ditangani oleh changeset via unique_constraint.
-  """
+  @doc "Membuat permission baru"
+  @spec create_permission(map()) :: {:ok, Permission.t()} | {:error, Ecto.Changeset.t()}
   def create_permission(attrs \\ %{}) do
     %Permission{}
     |> Permission.changeset(attrs)
     |> Repo.insert()
   end
 
-  @doc """
-  Mengupdate permission.
-  Permission sistem tidak boleh diubah resource atau action-nya
-  karena keduanya adalah identitas permission.
-  Field description tetap boleh diubah.
-  """
+  @doc "Mengambil semua permission"
+  @spec list_permissions() :: [Permission.t()]
+  def list_permissions, do: Repo.all(Permission)
+
+  @doc "Mengambil permission berdasarkan ID, jika tidak ditemukan akan melempar error"
+  @spec get_permission!(Ecto.UUID.t()) :: Permission.t()
+  def get_permission!(id), do: Repo.get!(Permission, id)
+
+  @doc "Memperbarui permission"
+  @spec update_permission(Permission.t(), map()) ::
+          {:ok, Permission.t()} | {:error, Ecto.Changeset.t()}
   def update_permission(%Permission{} = permission, attrs) do
-    if system_permission?(permission) and has_identity_change?(attrs) do
-      {:error, {:permission, :cannot_update_system_permission_identity}}
-    else
-      permission
-      |> Permission.changeset(attrs)
-      |> Repo.update()
-    end
+    permission
+    |> Permission.changeset(attrs)
+    |> Repo.update()
   end
 
-  @doc """
-  Menghapus permission.
-  Mendelegasikan seluruh pengecekan ke can_delete_permission?/1
-  untuk menghindari duplikasi logika bisnis.
-  """
+  @doc "Menghapus permission"
+  @spec delete_permission(Permission.t()) :: {:ok, Permission.t()} | {:error, Ecto.Changeset.t()}
   def delete_permission(%Permission{} = permission) do
-    if can_delete_permission?(permission) do
-      Repo.delete(permission)
-    else
-      {:error, permission_deletion_error_reason(permission)}
-    end
+    Repo.delete(permission)
   end
 
+  @doc "Membuat perubahan pada permission tanpa menyimpannya ke database"
+  @spec change_permission(Permission.t(), map()) :: Ecto.Changeset.t()
   def change_permission(%Permission{} = permission, attrs \\ %{}) do
     Permission.changeset(permission, attrs)
   end
 
-  ## --------------- Helper ------------------
+  ## =========================================
+  ## QUERY Role
+  ## =========================================
 
-  @doc "Mengambil permission berdasarkan resource dan action."
-  def get_permission(resource, action)
-      when is_binary(resource) and is_binary(action) do
-    Repo.get_by(Permission, resource: resource, action: action)
-  end
-
-  @doc "Mengecek apakah permission dengan id tertentu ada."
-  def permission_exists?(id) when is_binary(id) do
-    Permission
-    |> where([p], p.id == ^id)
-    |> Repo.exists?()
-  end
-
-  @doc "Mengecek apakah permission dengan resource dan action tertentu ada."
-  def permission_exists?(resource, action)
-      when is_binary(resource) and is_binary(action) do
-    Permission
-    |> where([p], p.resource == ^resource and p.action == ^action)
-    |> Repo.exists?()
-  end
-
-  @doc "Mengembalikan daftar permission berdasarkan resource, diurutkan berdasarkan action."
-  def list_permissions_by_resource(resource) when is_binary(resource) do
-    Permission
-    |> where([p], p.resource == ^resource)
-    |> order_by([p], asc: p.action)
+  @doc "Melihat role apa saja yang dimiliki oleh seorang user"
+  @spec roles_for_user(User.t()) :: [Role.t()]
+  def roles_for_user(%User{} = user) do
+    UserRole
+    |> where([ur], ur.user_id == ^user.id and ur.is_active == true)
+    |> join(:inner, [ur], r in Role, on: ur.role_id == r.id)
+    |> select([_ur, r], r)
     |> Repo.all()
   end
 
-  ## ----------- Validation Helper -----------
+  ## =========================================
+  ## QUERY Permission
+  ## =========================================
 
-  @doc "Memvalidasi bahwa permission dengan id tertentu ada di database."
-  def valid_permission?(id) when is_binary(id), do: permission_exists?(id)
+  @doc "Melihat permission apa saja yang dimiliki oleh sebuah role"
+  @spec permissions_for_role(Role.t()) :: [Permission.t()]
+  def permissions_for_role(%Role{} = role) do
+    RolePermission
+    |> where([rp], rp.role_id == ^role.id)
+    |> join(:inner, [rp], p in Permission, on: rp.permission_id == p.id)
+    |> select([_rp, p], p)
+    |> Repo.all()
+  end
 
-  @doc "Memvalidasi bahwa permission dengan resource dan action tertentu ada."
-  def valid_permission?(resource, action)
+  @doc "Melihat permission apa saja yang dimiliki oleh seorang user"
+  @spec permissions_for_user(User.t()) :: [Permission.t()]
+  def permissions_for_user(%User{} = user) do
+    UserRole
+    |> where([ur], ur.user_id == ^user.id and ur.is_active == true)
+    |> join(:inner, [ur], rp in RolePermission, on: ur.role_id == rp.role_id)
+    |> join(:inner, [_ur, rp], p in Permission, on: rp.permission_id == p.id)
+    |> select([_ur, _rp, p], p)
+    |> distinct(true)
+    |> Repo.all()
+  end
+
+  ## =========================================
+  ## Authorization Checks
+  ## =========================================
+
+  @doc "Memeriksa apakah user memiliki role tertentu"
+  @spec has_role?(User.t(), binary()) :: boolean()
+  def has_role?(%User{} = user, role_name) when is_binary(role_name) do
+    UserRole
+    |> where([ur], ur.user_id == ^user.id and ur.is_active == true)
+    |> join(:inner, [ur], r in Role, on: ur.role_id == r.id)
+    |> where([_ur, r], r.name == ^role_name)
+    |> Repo.exists?()
+  end
+
+  @doc "Memeriksa apakah user memiliki permission tertentu"
+  @spec has_permission?(User.t(), binary(), binary()) :: boolean()
+  def has_permission?(%User{} = user, resource, action)
       when is_binary(resource) and is_binary(action) do
-    permission_exists?(resource, action)
+    UserRole
+    |> where([ur], ur.user_id == ^user.id and ur.is_active == true)
+    |> join(:inner, [ur], rp in RolePermission, on: ur.role_id == rp.role_id)
+    |> join(:inner, [_ur, rp], p in Permission, on: rp.permission_id == p.id)
+    |> where([_ur, _rp, p], p.resource == ^resource)
+    |> where([_ur, _rp, p], p.action == ^action)
+    |> Repo.exists?()
   end
 
-  ## ----------- Business Helper -------------
-
-  defp system_permissions do
-    Application.fetch_env!(:forumid, :system_permissions)
-  end
-
-  @doc """
-  Mengecek apakah permission merupakan permission bawaan sistem.
-  Permission sistem dikonfigurasi via `config :forumid, system_permissions`.
-  """
-  def system_permission?(%Permission{resource: resource, action: action}) do
-    {String.downcase(resource), String.downcase(action)} in system_permissions()
-  end
-
-  @doc """
-  Mengecek apakah permission boleh dihapus.
-
-  Sebuah permission boleh dihapus hanya jika memenuhi kedua syarat:
-  1. Bukan permission sistem.
-  2. Tidak sedang digunakan role manapun.
-  """
-  def can_delete_permission?(%Permission{} = permission) do
-    not system_permission?(permission) and
-      not AccessControl.permission_in_use?(permission.id)
-  end
-
-  ## =========================================
-  ## Private Helpers
-  ## =========================================
-
-  defp has_name_change?(attrs) do
-    Map.has_key?(attrs, :name) or Map.has_key?(attrs, "name")
-  end
-
-  defp has_identity_change?(attrs) do
-    Map.has_key?(attrs, :resource) or Map.has_key?(attrs, "resource") or
-      Map.has_key?(attrs, :action) or Map.has_key?(attrs, "action")
-  end
-
-  defp deletion_error_reason(%Role{} = role) do
-    cond do
-      system_role?(role) -> {:role, :system_role}
-      AccessControl.role_in_use?(role.id) -> {:role, :in_use}
-      AccessControl.role_has_any_permission?(role.id) -> {:role, :has_permissions}
-    end
-  end
-
-  defp permission_deletion_error_reason(%Permission{} = permission) do
-    cond do
-      system_permission?(permission) -> {:permission, :system_permission}
-      AccessControl.permission_in_use?(permission.id) -> {:permission, :in_use}
-    end
+  @doc "Memeriksa apakah user dapat melakukan aksi tertentu pada sumber daya tertentu"
+  @spec can?(User.t(), binary(), binary()) :: boolean()
+  def can?(%User{} = user, resource, action) when is_binary(resource) and is_binary(action) do
+    has_permission?(user, resource, action)
   end
 end
