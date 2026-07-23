@@ -18,9 +18,9 @@ defmodule Forumid.Repo.Migrations.CreateUserRoles do
 
     create unique_index(:user_roles, [:user_id, :role_id])
 
-    # create index(:user_roles, [:user_id])
+    create index(:user_roles, [:user_id])
     create index(:user_roles, [:role_id])
     create index(:user_roles, [:assigned_by])
-    # create index(:user_roles, [:is_active])
+    create index(:user_roles, [:is_active])
   end
 end

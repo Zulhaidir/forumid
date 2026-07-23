@@ -1,8 +1,8 @@
 defmodule Forumid.AccessControl.RolePermission do
   use Forumid.Schema
   import Ecto.Changeset
+  import Ecto.Query
 
-  alias Forumid.Repo
   alias Forumid.Accounts.User
   alias Forumid.Authorization.Role
   alias Forumid.Authorization.Permission
@@ -31,45 +31,70 @@ defmodule Forumid.AccessControl.RolePermission do
     |> unique_constraint(:role_permission, name: :role_permissions_role_id_permission_id_index)
   end
 
-  # Pengganti foreign_key_constraint(:role_id)
+  ## Pengganti foreign_key_constraint(:role_id)
+  ## prepare_changes mencegah masalah race condition (di mana data induk tiba-tiba dihapus oleh pengguna lain tepat sebelum data anak disimpan).
   defp validate_role_exists(changeset) do
-    role_id = get_field(changeset, :role_id)
+    changeset
+    |> prepare_changes(fn changeset ->
+      role_id = get_field(changeset, :role_id)
 
-    if role_id do
-      case Repo.get(Role, role_id) do
-        nil -> add_error(changeset, :role_id, "role tidak ditemukan")
-        _ -> changeset
+      role_exists? =
+        Role
+        |> where([r], r.id == ^role_id)
+        |> lock("FOR UPDATE")
+        |> changeset.repo.exists?()
+
+      case role_exists? do
+        true -> changeset
+        false -> add_error(changeset, :role_id, "role tidak ditemukan")
       end
-    else
-      changeset
-    end
+    end)
   end
 
-  # Pengganti foreign_key_constraint(:permission_id)
+  ## Pengganti foreign_key_constraint(:permission_id)
+  ## prepare_changes mencegah masalah race condition (di mana data induk tiba-tiba dihapus oleh pengguna lain tepat sebelum data anak disimpan).
   defp validate_permission_exists(changeset) do
-    permission_id = get_field(changeset, :permission_id)
+    changeset
+    |> prepare_changes(fn changeset ->
+      permission_id = get_field(changeset, :permission_id)
 
-    if permission_id do
-      case Repo.get(Permission, permission_id) do
-        nil -> add_error(changeset, :permission_id, "permission tidak ditemukan")
-        _ -> changeset
+      permission_exists? =
+        Permission
+        |> where([p], p.id == ^permission_id)
+        |> lock("FOR UPDATE")
+        |> changeset.repo.exists?()
+
+      case permission_exists? do
+        true -> changeset
+        false -> add_error(changeset, :permission_id, "permission tidak ditemukan")
       end
-    else
-      changeset
-    end
+    end)
   end
 
-  # Pengganti foreign_key_constraint(:granted_by)
+  ## Pengganti foreign_key_constraint(:granted_by)
+  ## prepare_changes mencegah masalah race condition (di mana data induk tiba-tiba dihapus oleh pengguna lain tepat sebelum data anak disimpan).
   defp validate_granted_by_exists(changeset) do
-    granted_by = get_field(changeset, :granted_by)
+    changeset
+    |> prepare_changes(fn changeset ->
+      case get_field(changeset, :granted_by) do
+        nil ->
+          changeset
 
-    if granted_by do
-      case Repo.get(User, granted_by) do
-        nil -> add_error(changeset, :granted_by, "granted_by tidak ditemukan")
-        _ -> changeset
+        granted_by ->
+          granted_by_exists? =
+            User
+            |> where([u], u.id == ^granted_by)
+            |> lock("FOR UPDATE")
+            |> changeset.repo.exists?()
+
+          case granted_by_exists? do
+            true ->
+              changeset
+
+            false ->
+              add_error(changeset, :granted_by, "user yang memberikan permission tidak ditemukan")
+          end
       end
-    else
-      changeset
-    end
+    end)
   end
 end

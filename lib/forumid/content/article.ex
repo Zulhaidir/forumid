@@ -1,8 +1,8 @@
 defmodule Forumid.Content.Article do
   use Forumid.Schema
   import Ecto.Changeset
+  import Ecto.Query
 
-  alias Forumid.Repo
   alias Forumid.Accounts.User
   alias Forumid.Content.ArticleMedia
 
@@ -52,16 +52,22 @@ defmodule Forumid.Content.Article do
   end
 
   ## Pengganti foreign_key_constraint(:author_id)
+  ## perpare_changes mencegah masalah race condition (di mana data induk tiba-tiba dihapus oleh pengguna lain tepat sebelum data anak disimpan).
   defp validate_author_exists(changeset) do
-    author_id = get_field(changeset, :author_id)
+    changeset
+    |> prepare_changes(fn changeset ->
+      user_id = get_field(changeset, :author_id)
 
-    if author_id do
-      case Repo.get(User, author_id) do
-        nil -> add_error(changeset, :author_id, "penulis tidak ditemukan")
-        _ -> changeset
+      author_exists? =
+        User
+        |> where([u], u.id == ^user_id)
+        |> lock("FOR UPDATE")
+        |> changeset.repo.exists?()
+
+      case author_exists? do
+        true -> changeset
+        false -> add_error(changeset, :author_id, "penulis tidak ditemukan")
       end
-    else
-      changeset
-    end
+    end)
   end
 end

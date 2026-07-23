@@ -21,6 +21,6 @@ defmodule Forumid.Repo.Migrations.CreateRolePermissions do
     create index(:role_permissions, [:role_id])
     create index(:role_permissions, [:permission_id])
     create index(:role_permissions, [:granted_by])
-    # create index(:role_permissions, [:granted_at])
+    create index(:role_permissions, [:granted_at])
   end
 end
