@@ -15,6 +15,7 @@ defmodule Forumid.Content.Article do
     field :featured_image, :string
     field :status, :string
     field :published_at, :utc_datetime
+    field :lock_version, :integer, default: 1
 
     belongs_to :author, User
     has_many :article_media, ArticleMedia, preload_order: [asc: :sort_order]
@@ -49,6 +50,7 @@ defmodule Forumid.Content.Article do
     |> validate_inclusion(:status, @statuses)
     |> validate_author_exists()
     |> unique_constraint(:slug)
+    |> optimistic_lock(:lock_version)
   end
 
   ## Pengganti foreign_key_constraint(:author_id)

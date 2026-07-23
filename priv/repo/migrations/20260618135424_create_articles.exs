@@ -17,6 +17,8 @@ defmodule Forumid.Repo.Migrations.CreateArticles do
       add :published_at, :utc_datetime
       add :author_id, :binary_id, null: false
 
+      add :lock_version, :integer, default: 1, null: false
+
       timestamps(type: :utc_datetime)
     end
 

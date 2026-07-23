@@ -26,10 +26,15 @@ defmodule Forumid.Content do
   end
 
   ## UPDATE
+  ## Menggunakan optimistic_lock
   def update_article(%Article{} = article, attrs) do
     article
     |> Article.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(
+      stale_error_field: :lock_version,
+      stale_error_message:
+        "artikel ini sudah diubah oleh orang lain, silakan muat ulang data terbaru"
+    )
   end
 
   ## DELETE
