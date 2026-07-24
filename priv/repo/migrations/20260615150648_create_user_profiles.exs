@@ -12,6 +12,7 @@ defmodule Forumid.Repo.Migrations.CreateUserProfiles do
       add :phone, :string
       add :is_active, :boolean, default: false, null: false
       add :user_id, :binary_id, null: false
+      add :lock_version, :integer, default: 1, null: false
 
       timestamps(type: :utc_datetime)
     end

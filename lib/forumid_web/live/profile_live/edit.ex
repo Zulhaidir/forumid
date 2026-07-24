@@ -52,17 +52,32 @@ defmodule ForumidWeb.ProfileLive.Edit do
   @impl true
   def handle_event("save", %{"user_profile" => params}, socket) do
     case Profiles.update_user_profile(socket.assigns.profile, params) do
-      {:ok, _profile} ->
+      {:ok, profile} ->
         {:noreply,
          socket
+         |> assign(:profile, profile)
          |> put_flash(:info, "Profile updated successfully")
          |> push_navigate(to: ~p"/")}
 
-      {:error, changeset} ->
-        {:noreply,
-         socket
-         |> assign(:form, to_form(changeset))
-         |> put_flash(:error, "Failed to update profile")}
+      {:error, %Ecto.Changeset{errors: errors} = changeset} ->
+        if Keyword.has_key?(errors, :lock_version) do
+          fresh_profile =
+            Profiles.get_user_profile_by_user_id(socket.assigns.current_scope.user.id)
+
+          {:noreply,
+           socket
+           |> assign(:profile, fresh_profile)
+           |> assign(:form, to_form(Profiles.change_user_profile(fresh_profile, params)))
+           |> put_flash(
+             :error,
+             "Profil ini sudah diubah di tempat lain. Perubahan Anda tetap ditampilkan di form — silakan periksa ulang lalu simpan kembali."
+           )}
+        else
+          {:noreply,
+           socket
+           |> assign(:form, to_form(changeset))
+           |> put_flash(:error, "Failed to update profile")}
+        end
     end
   end
 end

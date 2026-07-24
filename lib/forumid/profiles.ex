@@ -23,7 +23,10 @@ defmodule Forumid.Profiles do
   def update_user_profile(%UserProfile{} = user_profile, attrs) do
     user_profile
     |> UserProfile.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(
+      stale_error_field: :lock_version,
+      stale_error_message: "profil ini sudah diubah, silakan muat ulang data terbaru"
+    )
   end
 
   ## CHANGESET

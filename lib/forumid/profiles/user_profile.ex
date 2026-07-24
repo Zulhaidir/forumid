@@ -12,6 +12,7 @@ defmodule Forumid.Profiles.UserProfile do
     field :bio, :string
     field :phone, :string
     field :is_active, :boolean, default: false
+    field :lock_version, :integer, default: 1
 
     belongs_to :user, User, type: :binary_id
 
@@ -24,6 +25,7 @@ defmodule Forumid.Profiles.UserProfile do
     |> cast(attrs, [:full_name, :username, :avatar_url, :bio, :phone, :is_active])
     |> validate_required([:full_name, :username])
     |> unique_constraint(:username)
+    |> optimistic_lock(:lock_version)
   end
 
   def registration_changeset(user_profile, attrs) do
