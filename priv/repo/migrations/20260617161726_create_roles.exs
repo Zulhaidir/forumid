@@ -6,7 +6,7 @@ defmodule Forumid.Repo.Migrations.CreateRoles do
       add :id, :binary_id, primary_key: true
       add :name, :string, null: false
       add :description, :text
-
+      add :lock_version, :integer, default: 1, null: false
       timestamps(type: :utc_datetime)
     end
 

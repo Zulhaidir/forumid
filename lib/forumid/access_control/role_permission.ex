@@ -11,12 +11,10 @@ defmodule Forumid.AccessControl.RolePermission do
   schema "role_permissions" do
     belongs_to :role, Role
     belongs_to :permission, Permission
-
-    # Audit trail
     field :granted_by, :binary_id
     field :is_active, :boolean, default: true
     field :granted_at, :utc_datetime
-
+    field :lock_version, :integer, default: 1
     timestamps(type: :utc_datetime)
   end
 
@@ -29,6 +27,7 @@ defmodule Forumid.AccessControl.RolePermission do
     |> validate_permission_exists()
     |> validate_granted_by_exists()
     |> unique_constraint(:role_permission, name: :role_permissions_role_id_permission_id_index)
+    |> optimistic_lock(:lock_version)
   end
 
   ## Pengganti foreign_key_constraint(:role_id)

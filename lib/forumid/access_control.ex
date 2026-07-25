@@ -35,7 +35,11 @@ defmodule Forumid.AccessControl do
   def update_user_role(%UserRole{} = user_role, attrs) do
     user_role
     |> UserRole.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(
+      stale_error_field: :lock_version,
+      stale_error_message:
+        "penugasan role ini sudah diubah di tempat lain, silakan muat ulang data terbaru"
+    )
   end
 
   @doc "Menghapus user_role"
@@ -78,7 +82,11 @@ defmodule Forumid.AccessControl do
   def update_role_permission(%RolePermission{} = role_permission, attrs) do
     role_permission
     |> RolePermission.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(
+      stale_error_field: :lock_version,
+      stale_error_message:
+        "penugasan permission ini sudah diubah di tempat lain, silakan muat ulang data terbaru"
+    )
   end
 
   @doc "Menghapus role_permission"
@@ -124,7 +132,7 @@ defmodule Forumid.AccessControl do
       %UserRole{is_active: false} = user_role ->
         user_role
         |> UserRole.changeset(%{is_active: true})
-        |> Repo.update()
+        |> Repo.update(stale_error_field: :lock_version)
     end
   end
 
@@ -140,7 +148,7 @@ defmodule Forumid.AccessControl do
       %UserRole{is_active: true} = user_role ->
         user_role
         |> UserRole.changeset(%{is_active: false})
-        |> Repo.update()
+        |> Repo.update(stale_error_field: :lock_version)
 
       %UserRole{is_active: false} ->
         {:error, :role_already_revoked}
@@ -177,7 +185,7 @@ defmodule Forumid.AccessControl do
       %RolePermission{is_active: false} = role_permission ->
         role_permission
         |> RolePermission.changeset(%{is_active: true})
-        |> Repo.update()
+        |> Repo.update(stale_error_field: :lock_version)
     end
   end
 
@@ -193,7 +201,7 @@ defmodule Forumid.AccessControl do
       %RolePermission{is_active: true} = role_permission ->
         role_permission
         |> RolePermission.changeset(%{is_active: false})
-        |> Repo.update()
+        |> Repo.update(stale_error_field: :lock_version)
 
       %RolePermission{is_active: false} ->
         {:error, :permission_already_revoked}

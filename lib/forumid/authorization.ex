@@ -33,7 +33,10 @@ defmodule Forumid.Authorization do
   def update_role(%Role{} = role, attrs) do
     role
     |> Role.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(
+      stale_error_field: :lock_version,
+      stale_error_message: "role ini sudah diubah di tempat lain, silakan muat ulang data terbaru"
+    )
   end
 
   @doc "Menghapus role"
@@ -74,7 +77,11 @@ defmodule Forumid.Authorization do
   def update_permission(%Permission{} = permission, attrs) do
     permission
     |> Permission.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(
+      stale_error_field: :lock_version,
+      stale_error_message:
+        "permission ini sudah diubah di tempat lain, silakan muat ulang data terbaru"
+    )
   end
 
   @doc "Menghapus permission"

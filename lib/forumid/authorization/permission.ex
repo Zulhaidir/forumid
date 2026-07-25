@@ -7,7 +7,7 @@ defmodule Forumid.Authorization.Permission do
     field :resource, :string
     field :action, :string
     field :description, :string
-
+    field :lock_version, :integer, default: 1
     timestamps(type: :utc_datetime)
   end
 
@@ -19,5 +19,6 @@ defmodule Forumid.Authorization.Permission do
     |> validate_length(:resource, min: 2, max: 100)
     |> validate_length(:action, min: 2, max: 100)
     |> unique_constraint(:resource_action, name: :permissions_resource_action_index)
+    |> optimistic_lock(:lock_version)
   end
 end

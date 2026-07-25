@@ -10,12 +10,10 @@ defmodule Forumid.AccessControl.UserRole do
   schema "user_roles" do
     belongs_to :user, User
     belongs_to :role, Role
-
-    # Audit trail
     field :assigned_at, :utc_datetime
     field :is_active, :boolean, default: true
     field :assigned_by, :binary_id
-
+    field :lock_version, :integer, default: 1
     timestamps(type: :utc_datetime)
   end
 
@@ -27,6 +25,7 @@ defmodule Forumid.AccessControl.UserRole do
     |> validate_role_exists()
     |> validate_assigned_by_exists()
     |> unique_constraint(:user_role, name: :user_roles_user_id_role_id_index)
+    |> optimistic_lock(:lock_version)
   end
 
   ## Pengganti foreign_key_constraint(:user_id)
