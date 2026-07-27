@@ -5,32 +5,35 @@ defmodule Forumid.Profiles.UserProfile do
 
   alias Forumid.Accounts.User
 
+  @statuses ["active", "inactive", "suspended", "archived"]
+  @onboarding_statuses ["draft", "complete"]
   schema "user_profiles" do
     field :full_name, :string
     field :username, :string
     field :avatar_url, :string
     field :bio, :string
     field :phone, :string
-    field :is_active, :boolean, default: false
+    field :status, :string, default: "active"
+    field :onboarding_status, :string, default: "draft"
     field :lock_version, :integer, default: 1
-
     belongs_to :user, User, type: :binary_id
-
     timestamps(type: :utc_datetime)
   end
 
   @doc false
   def changeset(user_profile, attrs) do
     user_profile
-    |> cast(attrs, [:full_name, :username, :avatar_url, :bio, :phone, :is_active])
+    |> cast(attrs, [:full_name, :username, :avatar_url, :bio, :phone, :status, :onboarding_status])
     |> validate_required([:full_name, :username])
     |> unique_constraint(:username)
+    |> validate_inclusion(:status, @statuses)
+    |> validate_inclusion(:onboarding_status, @onboarding_statuses)
     |> optimistic_lock(:lock_version)
   end
 
   def registration_changeset(user_profile, attrs) do
     user_profile
-    |> cast(attrs, [:user_id, :username, :is_active])
+    |> cast(attrs, [:user_id, :username])
     |> validate_required([:user_id, :username])
     |> validate_user_exists()
     |> unique_constraint(:user_id)

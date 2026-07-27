@@ -10,7 +10,8 @@ defmodule Forumid.Repo.Migrations.CreateUserProfiles do
       add :avatar_url, :string
       add :bio, :text
       add :phone, :string
-      add :is_active, :boolean, default: false, null: false
+      add :status, :string, null: false, default: "active"
+      add :onboarding_status, :string, default: "draft"
       add :user_id, :binary_id, null: false
       add :lock_version, :integer, default: 1, null: false
 
