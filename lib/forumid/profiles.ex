@@ -1,5 +1,6 @@
 defmodule Forumid.Profiles do
   import Ecto.Query, warn: false
+  alias Forumid.Authorization
   alias Forumid.Repo
   alias Forumid.Profiles.UserProfile
 
@@ -49,5 +50,30 @@ defmodule Forumid.Profiles do
   ## GET (by username)
   def get_user_profile_by_username(username) do
     Repo.get_by(UserProfile, username: username)
+  end
+
+  ## Suspend
+  def suspend_user(admin, %UserProfile{} = target_profile, reason \\ "suspended") do
+    if Authorization.can?(admin, "users", "suspend") do
+      target_profile
+      |> UserProfile.status_changeset(%{status: reason})
+      |> Repo.update(
+        stale_error_field: :lock_version,
+        stale_error_message:
+          "profil ini sudah diubah di tempat lain, silakan muat ulang data terbaru"
+      )
+    else
+      {:error, :unauthorized}
+    end
+  end
+
+  def unsuspend_user(admin, %UserProfile{} = target_profile) do
+    if Authorization.can?(admin, "users", "suspend") do
+      target_profile
+      |> UserProfile.status_changeset(%{status: "active"})
+      |> Repo.update(stale_error_field: :lock_version)
+    else
+      {:error, :unauthorized}
+    end
   end
 end

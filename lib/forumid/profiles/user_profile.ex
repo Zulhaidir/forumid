@@ -31,6 +31,14 @@ defmodule Forumid.Profiles.UserProfile do
     |> optimistic_lock(:lock_version)
   end
 
+  def status_changeset(user_profile, attrs) do
+    user_profile
+    |> cast(attrs, [:status])
+    |> validate_required([:status])
+    |> validate_inclusion(:status, @statuses)
+    |> optimistic_lock(:lock_version)
+  end
+
   def registration_changeset(user_profile, attrs) do
     user_profile
     |> cast(attrs, [:user_id, :username])

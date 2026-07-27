@@ -4,6 +4,7 @@ defmodule Forumid.Accounts do
   """
 
   import Ecto.Query, warn: false
+  alias Forumid.Profiles
   alias Forumid.Repo
 
   alias Forumid.Accounts.{User, UserToken, UserNotifier}
@@ -43,7 +44,36 @@ defmodule Forumid.Accounts do
   def get_user_by_email_and_password(email, password)
       when is_binary(email) and is_binary(password) do
     user = Repo.get_by(User, email: email)
-    if User.valid_password?(user, password), do: user
+
+    cond do
+      is_nil(user) -> nil
+      not User.valid_password?(user, password) -> nil
+      true -> check_account_status(user)
+    end
+  end
+
+  defp check_account_status(user) do
+    case Profiles.get_user_profile_by_user_id(user.id) do
+      %{status: status} when status in ["suspended", "archived"] ->
+        {:error, :account_suspended}
+
+      _ ->
+        user
+    end
+  end
+
+  def invalidate_sessions(user_id) do
+    tokens =
+      UserToken
+      |> where([t], t.user_id == ^user_id)
+      |> Repo.all()
+
+    {count, _} =
+      Repo.delete_all(from(t in UserToken, where: t.id in ^Enum.map(tokens, & &1.id)))
+
+    ForumidWeb.UserAuth.disconnect_sessions(tokens)
+
+    {count, tokens}
   end
 
   @doc """
@@ -127,7 +157,7 @@ defmodule Forumid.Accounts do
              %UserProfile{}
              |> UserProfile.registration_changeset(%{
                user_id: user.id,
-               username: "user_" <> String.slice(user.id, 0, 8)
+               username: "user_" <> String.slice(user.id, -8, 8)
              })
              |> Repo.insert() do
         {:ok, user}
