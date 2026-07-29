@@ -318,13 +318,25 @@ defmodule Forumid.Accounts do
         """
 
       {%User{confirmed_at: nil} = user, _token} ->
-        user
-        |> User.confirm_changeset()
-        |> update_user_and_delete_all_tokens()
+        case check_account_status(user) do
+          {:error, :account_suspended} = error ->
+            error
+
+          ^user ->
+            user
+            |> User.confirm_changeset()
+            |> update_user_and_delete_all_tokens()
+        end
 
       {user, token} ->
-        Repo.delete!(token)
-        {:ok, {user, []}}
+        case check_account_status(user) do
+          {:error, :account_suspended} = error ->
+            error
+
+          ^user ->
+            Repo.delete!(token)
+            {:ok, {user, []}}
+        end
 
       nil ->
         {:error, :not_found}
