@@ -12,11 +12,12 @@ defmodule Forumid.ProfilesTest do
     avatar_url: nil,
     bio: nil,
     phone: nil,
-    is_active: nil
+    status: nil,
+    onboarding_status: nil
   }
 
   ## ---------------------------------------------------------
-  ## CRUD
+  ## CRUD (Read & Update — create/delete dimiliki Accounts)
   ## ---------------------------------------------------------
   describe "CRUD" do
     test "list_user_profiles/0 returns all profiles" do
@@ -31,32 +32,6 @@ defmodule Forumid.ProfilesTest do
       assert Profiles.get_user_profile!(profile.id) == profile
     end
 
-    test "create_user_profile/1 with valid attrs creates profile" do
-      valid_attrs = %{
-        username: "some_username",
-        full_name: "Some User",
-        avatar_url: "avatar.png",
-        bio: "some bio",
-        phone: "08123456789",
-        is_active: true
-      }
-
-      assert {:ok, %UserProfile{} = profile} =
-               Profiles.create_user_profile(valid_attrs)
-
-      assert profile.username == "some_username"
-      assert profile.full_name == "Some User"
-      assert profile.avatar_url == "avatar.png"
-      assert profile.bio == "some bio"
-      assert profile.phone == "08123456789"
-      assert profile.is_active == true
-    end
-
-    test "create_user_profile/1 with invalid attrs returns changeset" do
-      assert {:error, %Ecto.Changeset{}} =
-               Profiles.create_user_profile(@invalid_attrs)
-    end
-
     test "update_user_profile/2 updates profile" do
       profile = user_profile_fixture()
 
@@ -66,7 +41,8 @@ defmodule Forumid.ProfilesTest do
         avatar_url: "updated.png",
         bio: "updated bio",
         phone: "08999999999",
-        is_active: false
+        onboarding_status: "complete",
+        status: "inactive"
       }
 
       assert {:ok, %UserProfile{} = updated} =
@@ -77,7 +53,8 @@ defmodule Forumid.ProfilesTest do
       assert updated.avatar_url == "updated.png"
       assert updated.bio == "updated bio"
       assert updated.phone == "08999999999"
-      assert updated.is_active == false
+      assert updated.onboarding_status == "complete"
+      assert updated.status == "inactive"
     end
 
     test "update_user_profile/2 with invalid attrs returns changeset" do
@@ -88,17 +65,6 @@ defmodule Forumid.ProfilesTest do
 
       assert Profiles.get_user_profile!(profile.id) == profile
     end
-
-    test "delete_user_profile/1 deletes profile" do
-      profile = user_profile_fixture()
-
-      assert {:ok, %UserProfile{}} =
-               Profiles.delete_user_profile(profile)
-
-      assert_raise Ecto.NoResultsError, fn ->
-        Profiles.get_user_profile!(profile.id)
-      end
-    end
   end
 
   ## ---------------------------------------------------------
@@ -108,8 +74,7 @@ defmodule Forumid.ProfilesTest do
     test "get_user_profile_by_user_id/1 returns profile" do
       profile = user_profile_fixture()
 
-      result =
-        Profiles.get_user_profile_by_user_id(profile.user_id)
+      result = Profiles.get_user_profile_by_user_id(profile.user_id)
 
       assert result.id == profile.id
       assert result.user_id == profile.user_id
@@ -118,8 +83,7 @@ defmodule Forumid.ProfilesTest do
     test "get_user_profile_by_username/1 returns profile" do
       profile = user_profile_fixture()
 
-      result =
-        Profiles.get_user_profile_by_username(profile.username)
+      result = Profiles.get_user_profile_by_username(profile.username)
 
       assert result.id == profile.id
       assert result.username == profile.username
@@ -128,31 +92,46 @@ defmodule Forumid.ProfilesTest do
     test "change_user_profile/1 returns changeset" do
       profile = user_profile_fixture()
 
-      assert %Ecto.Changeset{} =
-               Profiles.change_user_profile(profile)
+      assert %Ecto.Changeset{} = Profiles.change_user_profile(profile)
     end
   end
 
   ## ---------------------------------------------------------
-  ## VALIDATION
+  ## VALIDATION (Schema — diuji langsung ke UserProfile.changeset/2)
   ## ---------------------------------------------------------
   describe "validation" do
     test "username is required" do
-      assert {:error, changeset} =
-               Profiles.create_user_profile(%{})
+      changeset = UserProfile.changeset(%UserProfile{}, %{full_name: "Some User"})
 
       assert "can't be blank" in errors_on(changeset).username
     end
 
     test "full_name is required" do
-      attrs = %{
-        username: "some_username"
-      }
-
-      assert {:error, changeset} =
-               Profiles.create_user_profile(attrs)
+      changeset = UserProfile.changeset(%UserProfile{}, %{username: "some_username"})
 
       assert "can't be blank" in errors_on(changeset).full_name
+    end
+
+    test "status must be a valid inclusion" do
+      changeset =
+        UserProfile.changeset(%UserProfile{}, %{
+          username: "some_username",
+          full_name: "Some User",
+          status: "not_a_real_status"
+        })
+
+      assert "is invalid" in errors_on(changeset).status
+    end
+
+    test "onboarding_status must be a valid inclusion" do
+      changeset =
+        UserProfile.changeset(%UserProfile{}, %{
+          username: "some_username",
+          full_name: "Some User",
+          onboarding_status: "not_a_real_status"
+        })
+
+      assert "is invalid" in errors_on(changeset).onboarding_status
     end
   end
 
@@ -161,15 +140,11 @@ defmodule Forumid.ProfilesTest do
   ## ---------------------------------------------------------
   describe "uniqueness" do
     test "username must be unique" do
-      profile = user_profile_fixture()
-
-      attrs = %{
-        username: profile.username,
-        full_name: "Another User"
-      }
+      profile_1 = user_profile_fixture()
+      profile_2 = user_profile_fixture()
 
       assert {:error, changeset} =
-               Profiles.create_user_profile(attrs)
+               Profiles.update_user_profile(profile_2, %{username: profile_1.username})
 
       assert "has already been taken" in errors_on(changeset).username
     end

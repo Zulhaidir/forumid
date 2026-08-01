@@ -13,13 +13,6 @@ defmodule Forumid.Profiles do
     Repo.all(UserProfile)
   end
 
-  ## CREATE
-  def create_user_profile(attrs \\ %{}) do
-    %UserProfile{}
-    |> UserProfile.changeset(attrs)
-    |> Repo.insert()
-  end
-
   ## UPDATE
   def update_user_profile(%UserProfile{} = user_profile, attrs) do
     user_profile
