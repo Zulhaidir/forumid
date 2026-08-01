@@ -23,6 +23,11 @@ defmodule ForumidWeb.UserSessionController do
         |> put_flash(:info, info)
         |> UserAuth.log_in_user(user, user_params)
 
+      {:error, :account_suspended} ->
+        conn
+        |> put_flash(:error, "Account telah di suspended")
+        |> redirect(to: ~p"/users/log-in")
+
       _ ->
         conn
         |> put_flash(:error, "The link is invalid or it has expired.")
