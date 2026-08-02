@@ -4,6 +4,7 @@ defmodule Forumid.AccessControlFixtures do
   entities via the `Forumid.AccessControl` context.
   """
 
+  alias Forumid.Profiles
   alias Forumid.AccessControl
 
   import Forumid.AccountsFixtures
@@ -49,5 +50,22 @@ defmodule Forumid.AccessControlFixtures do
       |> AccessControl.create_role_permission()
 
     role_permission
+  end
+
+  def prepare_suspend_user(user) do
+    # Siapkan admin
+    admin = user_fixture()
+
+    # siapkan role dan permission
+    role = role_fixture(%{name: "superadmin-#{System.unique_integer([:positive])}"})
+    permission = permission_fixture(%{resource: "users", action: "suspend"})
+
+    # Assign role dan permission ke admin
+    {:ok, _user_role} = AccessControl.assign_role(admin.id, role.id)
+    {:ok, _role_permission} = AccessControl.assign_permission(role.id, permission.id)
+
+    # Suspend target
+    profile = Profiles.get_user_profile_by_user_id(user.id)
+    {:ok, _profile} = Profiles.suspend_user(admin, profile)
   end
 end

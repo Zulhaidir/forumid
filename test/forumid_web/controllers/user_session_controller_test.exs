@@ -2,11 +2,9 @@ defmodule ForumidWeb.UserSessionControllerTest do
   use ForumidWeb.ConnCase
 
   import Forumid.AccountsFixtures
-  import Forumid.AuthorizationFixtures
+  import Forumid.AccessControlFixtures
 
   alias Forumid.Accounts
-  alias Forumid.AccessControl
-  alias Forumid.Profiles
 
   setup do
     %{unconfirmed_user: unconfirmed_user_fixture(), user: user_fixture()}
@@ -76,26 +74,10 @@ defmodule ForumidWeb.UserSessionControllerTest do
     end
 
     test "redirects to login page when account is suspended", %{conn: conn, user: user} do
-      # 1. Siapkan target user dengan password
       user = set_password(user)
 
-      # 2. Siapkan admin (tidak perlu password, tidak login di test ini)
-      admin = user_fixture()
+      prepare_suspend_user(user)
 
-      # 3. Siapkan role dan permission yang sesuai dengan yang dicek
-      #    di Profiles.suspend_user/3 (resource: "users", action: "suspend")
-      role = role_fixture(%{name: "superadmin-#{System.unique_integer([:positive])}"})
-      permission = permission_fixture(%{resource: "users", action: "suspend"})
-
-      # 4. Hubungkan role ke admin, dan permission ke role
-      {:ok, _user_role} = AccessControl.assign_role(admin.id, role.id)
-      {:ok, _role_permission} = AccessControl.assign_permission(role.id, permission.id)
-
-      # 5. Ambil profile target dan suspend
-      target_profile = Profiles.get_user_profile_by_user_id(user.id)
-      {:ok, _suspended_profile} = Profiles.suspend_user(admin, target_profile)
-
-      # 6. Coba login dengan kredensial yang sudah suspended
       conn =
         post(conn, ~p"/users/log-in", %{
           "user" => %{"email" => user.email, "password" => valid_user_password()}
@@ -162,6 +144,23 @@ defmodule ForumidWeb.UserSessionControllerTest do
                "The link is invalid or it has expired."
 
       assert redirected_to(conn) == ~p"/users/log-in"
+    end
+
+    test "redirects to login page when account is suspended", %{conn: conn, user: user} do
+      prepare_suspend_user(user)
+
+      # Generate magic link
+      {token, _hashed_token} = generate_user_magic_link_token(user)
+
+      # Login
+      conn =
+        post(conn, ~p"/users/log-in", %{
+          "user" => %{"token" => token}
+        })
+
+      assert redirected_to(conn) == ~p"/users/log-in"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Account telah di suspended"
+      refute get_session(conn, :user_token)
     end
   end
 
