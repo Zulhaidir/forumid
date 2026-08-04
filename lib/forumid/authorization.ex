@@ -168,4 +168,18 @@ defmodule Forumid.Authorization do
   def can?(%User{} = user, resource, action) when is_binary(resource) and is_binary(action) do
     has_permission?(user, resource, action)
   end
+
+  ## =========================================
+  ## Scope Helpers
+  ## =========================================
+
+  @doc """
+  Mengambil daftar permission untuk user dalam format string "resource:action".
+  Berguna untuk dimasukkan ke dalam Scope agar pengecekan di memori menjadi O(1).
+  """
+  @spec permission_strings_for_user(User.t()) :: [String.t()]
+  def permission_strings_for_user(%User{} = user) do
+    permissions_for_user(user)
+    |> Enum.map(fn p -> "#{p.resource}:#{p.action}" end)
+  end
 end

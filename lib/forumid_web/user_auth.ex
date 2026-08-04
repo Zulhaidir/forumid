@@ -67,8 +67,11 @@ defmodule ForumidWeb.UserAuth do
   def fetch_current_scope_for_user(conn, _opts) do
     with {token, conn} <- ensure_user_token(conn),
          {user, token_inserted_at} <- Accounts.get_user_by_session_token(token) do
+      # Ambil permissions user
+      permissions = Forumid.Authorization.permission_strings_for_user(user)
+
       conn
-      |> assign(:current_scope, Scope.for_user(user))
+      |> assign(:current_scope, Scope.for_user(user, permissions))
       |> maybe_reissue_user_session_token(user, token_inserted_at)
     else
       nil -> assign(conn, :current_scope, Scope.for_user(nil))
@@ -238,8 +241,31 @@ defmodule ForumidWeb.UserAuth do
     else
       socket =
         socket
-        |> Phoenix.LiveView.put_flash(:error, "You must re-authenticate to access this page.")
+        |> Phoenix.LiveView.put_flash(
+          :error,
+          "Anda harus melakukan autentikasi ulang untuk mengakses halaman ini."
+        )
         |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
+
+      {:halt, socket}
+    end
+  end
+
+  def on_mount({:require_permission, resource, action}, _params, _session, socket) do
+    # Pastikan current_scope sudah di-assign sebelumnya
+    socket = Phoenix.Component.assign_new(socket, :current_scope, fn -> nil end)
+    scope = socket.assigns.current_scope
+
+    if scope && Scope.can?(scope, resource, action) do
+      {:cont, socket}
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(
+          :error,
+          "Anda tidak memiliki izin untuk mengakses halaman ini."
+        )
+        |> Phoenix.LiveView.redirect(to: ~p"/")
 
       {:halt, socket}
     end
@@ -252,7 +278,9 @@ defmodule ForumidWeb.UserAuth do
           Accounts.get_user_by_session_token(user_token)
         end || {nil, nil}
 
-      Scope.for_user(user)
+      # Ambil permissions user jika user ada
+      permissions = if user, do: Forumid.Authorization.permission_strings_for_user(user), else: []
+      Scope.for_user(user, permissions)
     end)
   end
 
@@ -284,4 +312,29 @@ defmodule ForumidWeb.UserAuth do
   end
 
   defp maybe_store_return_to(conn), do: conn
+
+  ## =========================================
+  ## Authorization Policies (Permissions)
+  ## =========================================
+
+  @doc """
+  Plug untuk route Controller yang membutuhkan permission tertentu.
+  Contoh penggunaan di router: plug :require_permission, "articles" => "create"
+  """
+  def require_permission(conn, opts) do
+    resource = Keyword.fetch!(opts, :resource)
+    action = Keyword.fetch!(opts, :action)
+
+    scope = conn.assigns[:current_scope]
+
+    if scope && Scope.can?(scope, resource, action) do
+      conn
+    else
+      conn
+      |> put_flash(:error, "
+Anda tidak memiliki izin untuk mengakses halaman ini.")
+      |> redirect(to: ~p"/")
+      |> halt()
+    end
+  end
 end

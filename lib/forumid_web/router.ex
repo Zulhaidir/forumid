@@ -17,11 +17,35 @@ defmodule ForumidWeb.Router do
     plug :accepts, ["json"]
   end
 
+  # 1. Authenticated routes (Harus di atas route public /articles/:slug)
+  scope "/", ForumidWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live_session :require_authenticated_user,
+      on_mount: [{ForumidWeb.UserAuth, :require_authenticated}] do
+      live "/users/profile/edit", ProfileLive.Edit, :edit
+      live "/users/settings", UserLive.Settings, :edit
+      live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
+    end
+
+    live_session :require_article_permission,
+      on_mount: [
+        {ForumidWeb.UserAuth, :require_authenticated},
+        {ForumidWeb.UserAuth, {:require_permission, "articles", "create"}}
+      ] do
+      live "/articles", ArticleLive.Index, :index
+      live "/articles/new", ArticleLive.Form, :new
+      live "/articles/:slug/edit", ArticleLive.Form, :edit
+    end
+
+    post "/users/update-password", UserSessionController, :update_password
+  end
+
+  # 2. Public routes (Ditaruh ke bawah agar /articles/new tidak tertangkap di sini)
   scope "/", ForumidWeb do
     pipe_through :browser
 
     get "/", PageController, :home
-
     live "/@:username", ProfileLive.Show, :show
     get "/articles/:slug", ArticleController, :show
   end
@@ -33,11 +57,6 @@ defmodule ForumidWeb.Router do
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:forumid, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do
@@ -48,21 +67,7 @@ defmodule ForumidWeb.Router do
     end
   end
 
-  ## Authentication routes
-
-  scope "/", ForumidWeb do
-    pipe_through [:browser, :require_authenticated_user]
-
-    live_session :require_authenticated_user,
-      on_mount: [{ForumidWeb.UserAuth, :require_authenticated}] do
-      live "/users/profile/edit", ProfileLive.Edit, :edit
-      live "/users/settings", UserLive.Settings, :edit
-      live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
-    end
-
-    post "/users/update-password", UserSessionController, :update_password
-  end
-
+  # 3. Authentication routes (Login, Register, Logout)
   scope "/", ForumidWeb do
     pipe_through [:browser]
 

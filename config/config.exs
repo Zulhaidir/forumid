@@ -91,5 +91,9 @@ config :forumid,
     {"permissions", "read"},
     {"permissions", "create"},
     {"permissions", "update"},
-    {"permissions", "delete"}
+    {"permissions", "delete"},
+    {"articles", "create"},
+    {"articles", "read"},
+    {"articles", "update"},
+    {"articles", "delete"}
   ]

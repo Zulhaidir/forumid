@@ -18,16 +18,37 @@ defmodule Forumid.Accounts.Scope do
 
   alias Forumid.Accounts.User
 
-  defstruct user: nil
+  defstruct user: nil, permissions: MapSet.new()
 
   @doc """
   Creates a scope for the given user.
 
   Returns nil if no user is given.
   """
+  def for_user(%User{} = user, permissions) do
+    %__MODULE__{
+      user: user,
+      permissions: MapSet.new(permissions)
+    }
+  end
+
+  # Tangani nil dengan 2 argumen
+  def for_user(nil, _permissions), do: nil
+
   def for_user(%User{} = user) do
-    %__MODULE__{user: user}
+    for_user(user, [])
   end
 
   def for_user(nil), do: nil
+
+  @doc """
+  Memeriksa apakah scope (user) memiliki permission tertentu.
+  Contoh: Scope.can?(scope, "articles", "create")
+  """
+  def can?(%__MODULE__{permissions: permissions}, resource, action)
+      when is_binary(resource) and is_binary(action) do
+    MapSet.member?(permissions, "#{resource}:#{action}")
+  end
+
+  def can?(nil, _resource, _action), do: false
 end

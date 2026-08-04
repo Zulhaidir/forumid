@@ -104,15 +104,6 @@ defmodule Forumid.Content do
     |> Repo.preload([:author, :article_media])
   end
 
-  ## Count
-  ## Exists
-  ## Validation
-  ## Availibility
-
-  ## ----------- Business Helper -------------
-  ## Business Rule
-  ## Domain Operation
-
   ## Relationship Operation
   defp delete_article_relationships(%Article{} = article) do
     media_list =
@@ -181,14 +172,11 @@ defmodule Forumid.Content do
     |> Repo.all()
   end
 
-  ## Lookup
-  ## Count
-  ## Exists
-  ## Validation
-  ## Availibility
-
-  ## ----------- Business Helper -------------
-  ## Business Rule
-  ## Domain Operation
-  ## Relationship Operation
+  @doc "Mengambil artikel milik user tertentu"
+  def list_articles_by_user(user_id) do
+    Article
+    |> where([a], a.author_id == ^user_id)
+    |> order_by([a], desc: a.inserted_at)
+    |> Repo.all()
+  end
 end
