@@ -16,7 +16,7 @@ defmodule Forumid.Profiles.UserProfile do
     field :status, :string, default: "active"
     field :onboarding_status, :string, default: "draft"
     field :lock_version, :integer, default: 1
-    belongs_to :user, User, type: :binary_id
+    belongs_to :user, User
     timestamps(type: :utc_datetime)
   end
 
