@@ -33,7 +33,7 @@ defmodule Forumid.Content do
     |> Repo.update(
       stale_error_field: :lock_version,
       stale_error_message:
-        "artikel ini sudah diubah oleh orang lain, silakan muat ulang data terbaru"
+        "artikel ini sudah diubah di tempat lain, silakan muat ulang data terbaru"
     )
   end
 
@@ -153,7 +153,7 @@ defmodule Forumid.Content do
     |> Repo.update(
       stale_error_field: :lock_version,
       stale_error_message:
-        "media ini sudah diubah oleh orang lain, silakan muat ulang data terbaru"
+        "media ini sudah diubah di tempat lain, silakan muat ulang data terbaru"
     )
   end
 

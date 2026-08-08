@@ -76,7 +76,7 @@ defmodule Forumid.Forum do
     |> Repo.update(
       stale_error_field: :lock_version,
       stale_error_message:
-        "Kategori ini sudah diubah oleh orang lain, silahkan muat ulang data tersebut"
+        "Kategori ini sudah diubah di tempat lain, silahkan muat ulang data terbaru"
     )
   end
 
@@ -202,8 +202,7 @@ defmodule Forumid.Forum do
     |> Tag.changeset(attrs)
     |> Repo.update(
       stale_error_field: :lock_version,
-      stale_error_message:
-        "Tag ini sudah diubah oleh orang lain, silahkan muat ulang data tersebut"
+      stale_error_message: "Tag ini sudah diubah di tempat lain, silahkan muat ulang data terbaru"
     )
   end
 
@@ -301,7 +300,7 @@ defmodule Forumid.Forum do
     |> Repo.update(
       stale_error_field: :lock_version,
       stale_error_message:
-        "Topik ini sudah diubah oleh orang lain, silahkan muat ulang data tersebut"
+        "Topik ini sudah diubah di tempat lain, silahkan muat ulang data terbaru"
     )
   end
 
@@ -416,7 +415,7 @@ defmodule Forumid.Forum do
     |> Repo.update(
       stale_error_field: :lock_version,
       stale_error_message:
-        "Post ini sudah diubah oleh orang lain, silahkan muat ulang data tersebut"
+        "Post ini sudah diubah di tempat lain, silahkan muat ulang data terbaru"
     )
   end
 
