@@ -73,7 +73,11 @@ defmodule Forumid.Forum do
   def update_category(%Category{} = category, attrs) do
     category
     |> Category.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(
+      stale_error_field: :lock_version,
+      stale_error_message:
+        "Kategori ini sudah diubah oleh orang lain, silahkan muat ulang data tersebut"
+    )
   end
 
   @doc """
@@ -196,7 +200,11 @@ defmodule Forumid.Forum do
   def update_tag(%Tag{} = tag, attrs) do
     tag
     |> Tag.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(
+      stale_error_field: :lock_version,
+      stale_error_message:
+        "Tag ini sudah diubah oleh orang lain, silahkan muat ulang data tersebut"
+    )
   end
 
   @doc """
@@ -290,7 +298,11 @@ defmodule Forumid.Forum do
   def update_topic(%Topic{} = topic, attrs) do
     topic
     |> Topic.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(
+      stale_error_field: :lock_version,
+      stale_error_message:
+        "Topik ini sudah diubah oleh orang lain, silahkan muat ulang data tersebut"
+    )
   end
 
   @doc """
@@ -401,7 +413,11 @@ defmodule Forumid.Forum do
   def update_post(%Post{} = post, attrs) do
     post
     |> Post.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(
+      stale_error_field: :lock_version,
+      stale_error_message:
+        "Post ini sudah diubah oleh orang lain, silahkan muat ulang data tersebut"
+    )
   end
 
   @doc """
