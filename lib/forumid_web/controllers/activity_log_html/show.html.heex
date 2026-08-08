@@ -1,0 +1,19 @@
+<Layouts.app flash={@flash}>
+  <.header>
+    Activity log Details
+    <:subtitle>Detail riwayat tindakan moderator</:subtitle>
+    <:actions>
+      <.button navigate={~p"/moderation/activity_logs"}>
+        <.icon name="hero-arrow-left" />
+      </.button>
+    </:actions>
+  </.header>
+
+  <.list>
+    <:item title="Time">{@activity_log.inserted_at}</:item>
+    <:item title="Action">{@activity_log.action}</:item>
+    <:item title="Resource">{@activity_log.resource} ({@activity_log.resource_id})</:item>
+    <:item title="Description">{@activity_log.description}</:item>
+    <:item title="User ID">{@activity_log.user_id}</:item>
+  </.list>
+</Layouts.app>

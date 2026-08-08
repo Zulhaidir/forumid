@@ -1,0 +1,24 @@
+<Layouts.app flash={@flash}>
+  <.header>
+    Activity Logs
+    <:subtitle>Riwayat tindakan moderator</:subtitle>
+  </.header>
+
+  <.table id="activity_logs" rows={@activity_logs}>
+    <:col :let={activity_log} label="Time">
+      {activity_log.inserted_at}
+    </:col>
+    <:col :let={activity_log} label="Action">
+      {activity_log.action}
+    </:col>
+    <:col :let={activity_log} label="Resource">
+      {activity_log.resource} ({activity_log.resource_id})
+    </:col>
+    <:col :let={activity_log} label="Description">
+      {activity_log.description}
+    </:col>
+    <:col :let={activity_log} label="User ID">
+      {activity_log.user_id}
+    </:col>
+  </.table>
+</Layouts.app>

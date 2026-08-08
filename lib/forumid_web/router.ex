@@ -41,6 +41,20 @@ defmodule ForumidWeb.Router do
     post "/users/update-password", UserSessionController, :update_password
   end
 
+  scope "/moderation", ForumidWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    # live_session :require_moderation_permission,
+    #   on_mount: [
+    #     {ForumidWeb.UserAuth, :require_authenticated},
+    #     {ForumidWeb.UserAuth, {:require_permission, "audit", "read"}}
+    #   ] do
+    #   live "/moderation", ModerationLive.Index, :index
+    # end
+
+    resources "/activity_logs", ActivityLogController, only: [:index, :show]
+  end
+
   # 2. Public routes (Ditaruh ke bawah agar /articles/new tidak tertangkap di sini)
   scope "/", ForumidWeb do
     pipe_through :browser
