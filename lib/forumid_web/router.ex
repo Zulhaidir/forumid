@@ -44,13 +44,15 @@ defmodule ForumidWeb.Router do
   scope "/moderation", ForumidWeb do
     pipe_through [:browser, :require_authenticated_user]
 
-    # live_session :require_moderation_permission,
-    #   on_mount: [
-    #     {ForumidWeb.UserAuth, :require_authenticated},
-    #     {ForumidWeb.UserAuth, {:require_permission, "audit", "read"}}
-    #   ] do
-    #   live "/moderation", ModerationLive.Index, :index
-    # end
+    # Aktifkan kembali route LiveView ini:
+    live_session :require_moderation_permission,
+      on_mount: [
+        {ForumidWeb.UserAuth, :require_authenticated},
+        {ForumidWeb.UserAuth, {:require_permission, "forum", "update"}}
+      ] do
+      live "/", TopicLive.Index, :index
+      live "/topics/:id", TopicLive.Show, :show
+    end
 
     resources "/activity_logs", ActivityLogController, only: [:index, :show]
   end

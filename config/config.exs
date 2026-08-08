@@ -95,5 +95,9 @@ config :forumid,
     {"articles", "create"},
     {"articles", "read"},
     {"articles", "update"},
-    {"articles", "delete"}
+    {"articles", "delete"},
+    {"forum", "create"},
+    {"forum", "read"},
+    {"forum", "update"},
+    {"audit", "read"}
   ]
